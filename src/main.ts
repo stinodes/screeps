@@ -1,4 +1,5 @@
-import { ErrorMapper } from "utils/ErrorMapper";
+import { ErrorMapper } from './utils/ErrorMapper'
+import { Collections } from './Memory/index'
 
 declare global {
   /*
@@ -10,34 +11,69 @@ declare global {
     Interfaces matching on name from @types/screeps will be merged. This is how you can extend the 'built-in' interfaces from @types/screeps.
   */
   // Memory extension samples
-  interface Memory {
-    uuid: number;
-    log: any;
-  }
-
+  // eslint-disable-next-line
   interface CreepMemory {
-    role: string;
-    room: string;
-    working: boolean;
+    jobName: string
+    jobId: string
   }
-
-  // Syntax for adding proprties to `global` (ex "global.log")
-  namespace NodeJS {
-    interface Global {
-      log: any;
+  // eslint-disable-next-line
+  interface Memory {
+    uuid: number
+    log: any
+    [type: string]: {
+      [id: string]: any
     }
   }
+  // eslint-disable-next-line
+  namespace NodeJS {
+    // eslint-disable-next-line
+    interface Global {
+      db: typeof Collections
+    }
+  }
+}
+
+const createVillage = () => {
+  console.log('creating village')
+  const room = Object.values(Game.spawns)[0].room
+  const village = Collections.villages.create('base', Collections.villages.ID())
+  village.load({
+    type: village.type,
+    id: village.id,
+    name: village.id,
+    room: room.name,
+    missions: [],
+    villagers: []
+  })
 }
 
 // When compiling TS to JS and bundling with rollup, the line numbers and file names in error messages change
 // This utility uses source maps to get the line numbers and file names of the original, TS source code
 export const loop = ErrorMapper.wrapLoop(() => {
-  console.log(`Current game tick is ${Game.time}`);
+  console.log(`Current game tick is ${Game.time}`)
+
+  global.db = Collections
+
+  const villages = Collections.villages.loadAll()
+
+  if (!villages.length) createVillage()
+
+  villages
+    .map(village => {
+      village.update()
+      return village
+    })
+    .map(village => {
+      village.run()
+      return village
+    })
+
+  Object.values(Collections).forEach(collection => collection.saveAll())
 
   // Automatically delete memory of missing creeps
   for (const name in Memory.creeps) {
     if (!(name in Game.creeps)) {
-      delete Memory.creeps[name];
+      delete Memory.creeps[name]
     }
   }
-});
+})
