@@ -35,8 +35,9 @@ declare global {
 
 const createVillage = () => {
   console.log('creating village')
+  const spawn = Object.values(Game.spawns)[0]
   const room = Object.values(Game.spawns)[0].room
-  const village = Collections.villages.create('base', Collections.villages.ID())
+  const village = Collections.villages.create('base', spawn.name)
   village.load({
     type: village.type,
     id: village.id,
