@@ -35,7 +35,7 @@ export class Maintain extends Mission<MaintainEntry, Jobs> {
    */
   protected getRequiredJobs(): string[] {
     const sources = this.village.room.find(FIND_SOURCES_ACTIVE)
-    const builders = Math.max(1, Math.round(this.constructionSites.length / 4))
+    const builders = Math.max(1, Math.ceil(this.constructionSites.length / 4))
 
     // peasant chunks
     const workers: (string[] | string)[] = _.chunk(
@@ -44,7 +44,6 @@ export class Maintain extends Mission<MaintainEntry, Jobs> {
     )
     // add middle and end upgrader
     workers.splice(1, 0, 'upgrader')
-    workers.push('upgrader')
     // append builders
     workers.push(new Array(builders).fill('builder'))
     const flattenedWorkers = workers.flat()
@@ -76,7 +75,7 @@ export class Maintain extends Mission<MaintainEntry, Jobs> {
         .filter(site => !this.constructionSites.some(s => site.id === s.id))
       this.constructionSites = [...this.constructionSites, ...newSites]
     }
-    this.constructionSites = this.constructionSites.filter(this.isConstructionFinished.bind(this))
+    this.constructionSites = this.constructionSites.filter(c => !this.isConstructionFinished(c))
     this.jobs.forEach(job => {
       if (job.type === ('builder' as const)) {
         if (!job.construction || this.isConstructionFinished(job.construction)) {

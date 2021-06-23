@@ -23,7 +23,7 @@ export class Upgrader extends Job<UpgraderEntry, Upgrade | Load | Harvest> {
     return memory
   }
 
-  protected getNextTask(finishedTask?: Upgrade | Load): Upgrade | Load | Harvest {
+  protected getNextTask(finishedTask?: Upgrade | Load | Harvest): Upgrade | Load | Harvest {
     const type = finishedTask?.type
     switch (type) {
       case 'load':
@@ -70,6 +70,8 @@ export class Upgrader extends Job<UpgraderEntry, Upgrade | Load | Harvest> {
 
   public update(): void {
     if (this.spawning) return
+    if (this.storage && (this.storage.store as Store<RESOURCE_ENERGY, false>).getUsedCapacity() === 0)
+      this.storage = null
     if (!this.storage) this.storage = this.getStorage()
     super.update()
   }
