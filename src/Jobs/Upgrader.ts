@@ -6,7 +6,7 @@ import { Harvest } from '../Tasks/Harvest'
 
 type UpgraderEntry = JobEntry & { room: string; storage: null | string }
 export class Upgrader extends Job<UpgraderEntry, Upgrade | Load | Harvest> {
-  public type = 'upgrader'
+  public type: 'upgrader' = 'upgrader'
   public room: Room
   public storage: null | AnyStoreStructure
   public body = [WORK, MOVE, CARRY]
@@ -57,7 +57,9 @@ export class Upgrader extends Job<UpgraderEntry, Upgrade | Load | Harvest> {
   }
 
   private getStorage(): null | AnyStoreStructure {
-    const storages = this.room.find(FIND_MY_STRUCTURES, { filter: { structureType: STRUCTURE_STORAGE } })
+    const storages = this.room
+      .find(FIND_STRUCTURES)
+      .filter(s => s.structureType === STRUCTURE_STORAGE || s.structureType === STRUCTURE_CONTAINER)
     if (storages.length) return storages[0] as AnyStoreStructure
     const extensions = this.room
       .find(FIND_MY_STRUCTURES, { filter: { structureType: STRUCTURE_EXTENSION } })

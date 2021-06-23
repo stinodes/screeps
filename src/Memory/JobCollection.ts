@@ -15,7 +15,7 @@ export class JobCollection extends Collection<Job<JobEntry>> {
       case 'builder':
         return Builder
       default:
-        return Peasant
+        throw new Error('Not a matching job')
     }
   }
 }

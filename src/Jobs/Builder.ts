@@ -1,10 +1,11 @@
 import { Job, JobEntry } from './Job'
 import { Load } from '../Tasks/Load'
 import { Build } from '../Tasks/Build'
+import { Collections } from '../Memory'
 
 type BuilderEntry = JobEntry & { room: string; construction: string }
 export class Builder extends Job<BuilderEntry, Build | Load> {
-  public type = 'builder'
+  public type: 'builder' = 'builder'
   public construction: null | ConstructionSite
   public room: Room
   public body = [WORK, MOVE, CARRY]
@@ -21,8 +22,8 @@ export class Builder extends Job<BuilderEntry, Build | Load> {
     return memory
   }
 
-  protected getNextTask(finishedTask: Build | Load): Build | Load {
-    if (finishedTask.type === 'build') {
+  protected getNextTask(finishedTask?: Build | Load): Build | Load {
+    if (finishedTask?.type === 'build') {
       return this.getLoadTask()
     } else {
       return this.getBuildTask()
@@ -30,27 +31,16 @@ export class Builder extends Job<BuilderEntry, Build | Load> {
   }
 
   private getLoadTask(): Load {
-    const load = new Load(Load.ID())
+    const load = Collections.tasks.create('load', Load.ID()) as Load
     const store = this.getLoadTarget()
-    load.load({
-      id: load.id,
-      type: load.type,
-      store: store?.id || '',
-      job: this.id,
-      finished: false
-    })
+    load.store = store
+    load.job = this
     return load
   }
   private getBuildTask(): Build {
-    const construction = this.construction
-    const build = new Build(Build.ID())
-    build.load({
-      id: build.id,
-      type: build.type,
-      construction: construction?.id || '',
-      job: this.id,
-      finished: false
-    })
+    const build = Collections.tasks.create('build', Build.ID()) as Build
+    build.construction = this.construction
+    build.job = this
     return build
   }
 
@@ -59,13 +49,17 @@ export class Builder extends Job<BuilderEntry, Build | Load> {
     return constructionSites[0] || null
   }
 
-  private getLoadTarget(): null | AnyOwnedStructure {
-    const storages = this.room.find(FIND_MY_STRUCTURES, { filter: { structureType: STRUCTURE_STORAGE } })
-    if (storages.length) return storages[0]
+  private getLoadTarget(): null | AnyStoreStructure {
+    const storages = this.room
+      .find(FIND_STRUCTURES)
+      .filter(s => s.structureType === STRUCTURE_STORAGE || s.structureType === STRUCTURE_CONTAINER)
+    if (storages.length) return storages[0] as AnyStoreStructure
     const extensions = this.room
       .find(FIND_MY_STRUCTURES, { filter: { structureType: STRUCTURE_EXTENSION } })
       .filter(ext => ext.structureType === STRUCTURE_EXTENSION && ext.store.getUsedCapacity(RESOURCE_ENERGY) > 0)
-    if (extensions.length) return extensions[0]
+    if (extensions.length) return extensions[0] as AnyStoreStructure
+    const spawns = this.room.find(FIND_MY_SPAWNS)
+    if (spawns.length) return spawns[0]
     return null
   }
 

@@ -41,30 +41,22 @@ export abstract class Mission<S extends MissionEntry, J extends Job<JobEntry>> e
   public removeUnits(...jobIds: string[]): void {
     this.jobs = this.jobs.filter(u => jobIds.indexOf(u.id) !== -1)
   }
-  protected getRequiredJobs(): { [job: string]: number } {
-    return {}
+  protected getRequiredJobs(): string[] {
+    return []
   }
 
-  public requestJobs(): string[] {
-    const jobs = this.jobs.reduce((prev, job) => {
-      const jobName = job.type
-      if (!prev[jobName]) prev[jobName] = 1
-      else prev[jobName] = prev[jobName] + 1
+  public requestJob(): null | string {
+    const currentJobStrings = this.jobs.map(j => j.type)
+    const requiredJobStrings = this.getRequiredJobs()
 
-      return prev
-    }, {} as { [job: string]: number })
+    const job = requiredJobStrings.find(requiredJob => {
+      const index = currentJobStrings.findIndex(foundJob => requiredJob === foundJob)
+      if (index === -1) return true
+      currentJobStrings.splice(index, 1)
+      return false
+    })
 
-    const requiredJobs = this.getRequiredJobs()
-    const jobsToRequest = Object.keys(requiredJobs).reduce((prev, job) => {
-      const requiredNumber = requiredJobs[job] - (jobs[job] || 0)
-      if (requiredNumber) {
-        const arr: string[] = new Array<string>(requiredNumber).fill(job)
-        return [...prev, ...arr]
-      }
-      return prev
-    }, [] as string[])
-
-    return jobsToRequest
+    return job || null
   }
 
   protected getFinished(): boolean {

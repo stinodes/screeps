@@ -5,7 +5,7 @@ type BuildEntry = TaskEntry & {
 }
 
 export class Build extends Task<BuildEntry> {
-  public type = 'build'
+  public type: 'build' = 'build'
   public construction: null | ConstructionSite
 
   public load(memory: BuildEntry): void {

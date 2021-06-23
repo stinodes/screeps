@@ -32,7 +32,6 @@ export class Harvest extends Task<HarvestEntry> {
     if (!this.source) return
 
     const result = this.harvest(this.source)
-    console.log('harvest run result', result)
     if (result === ERR_NOT_IN_RANGE) this.moveToTarget(this.source.pos)
   }
 }

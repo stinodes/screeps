@@ -5,7 +5,7 @@ import { Collections } from '../Memory'
 
 type PeasantEntry = JobEntry & { room: string; source: string }
 export class Peasant extends Job<PeasantEntry, Harvest | Stash> {
-  public type = 'peasant'
+  public type: 'peasant' = 'peasant'
   public source: null | Source
   public body = [WORK, MOVE, CARRY]
 
@@ -45,7 +45,9 @@ export class Peasant extends Job<PeasantEntry, Harvest | Stash> {
       .find(FIND_MY_STRUCTURES, { filter: { structureType: STRUCTURE_EXTENSION } })
       .filter(ext => ext.structureType === STRUCTURE_EXTENSION && ext.store.getFreeCapacity(RESOURCE_ENERGY) > 0)
     if (extensions.length) return extensions[0] as AnyStoreStructure
-    const storages = this.room.find(FIND_MY_STRUCTURES, { filter: { structureType: STRUCTURE_STORAGE } })
+    const storages = this.room
+      .find(FIND_STRUCTURES)
+      .filter(s => s.structureType === STRUCTURE_STORAGE || s.structureType === STRUCTURE_CONTAINER)
     if (storages.length) return storages[0] as AnyStoreStructure
   }
 

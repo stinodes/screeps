@@ -19,6 +19,7 @@ export class Village<S extends VillageEntry> extends State<S> implements Behavio
   public villagers: Job<JobEntry>[]
   public missions: MissionType[]
   public spawns: StructureSpawn[]
+  private triggeredSpawns: string[] = []
 
   public static ID = (): string => Collections.villages.ID()
 
@@ -43,50 +44,76 @@ export class Village<S extends VillageEntry> extends State<S> implements Behavio
   public get controllerLevel(): null | number {
     return this.room.controller?.level || null
   }
-  public attemptSpawnJob(spawn: StructureSpawn, jobName: string): void | Job<JobEntry> {
+
+  private getNextJobRequest(): null | { mission: MissionType; job: string } {
+    return this.missions.reduce((prev, mission) => {
+      if (prev) return prev
+      const job = mission.requestJob()
+      console.log('requested job:', job)
+      if (job) return { mission, job }
+      return null
+    }, null as null | { mission: MissionType; job: string })
+  }
+
+  private dryRunSpawnJob(spawn: StructureSpawn, jobName: string): boolean {
     const id = Job.ID()
     const name = `${jobName}:${id}`
     const testJob = Collections.jobs.create(jobName)
 
-    const dryRunResult = spawn.spawnCreep(testJob.body, `${jobName}:${id}`, {
+    const dryRunResult = spawn.spawnCreep(testJob.body, name, {
       dryRun: true
     })
 
-    if (dryRunResult !== 0) return
+    return dryRunResult === 0
+  }
 
+  private spawnJob(spawn: StructureSpawn, jobName: string): void | Job<JobEntry> {
+    if (this.triggeredSpawns.includes(spawn.name)) return
+
+    const id = Job.ID()
+    const name = `${jobName}:${id}`
     const job = Collections.jobs.create(jobName, id)
     job.creepName = name
     job.room = this.room
     const result = spawn.spawnCreep(job.body, name, {
       memory: { jobName, jobId: id }
     })
+
     if (result !== 0) {
       return
     }
+
+    this.triggeredSpawns.push(spawn.name)
     this.villagers = [...this.villagers, job]
-    console.log('spawned villager', name)
     return job
   }
 
-  private checkMissionNeeds(): { mission: MissionType; job: string }[] {
-    return this.missions.reduce((prev, mission) => {
-      const jobs = mission.requestJobs()
-      return prev.concat(jobs.map(job => ({ mission, job })))
-    }, [] as { mission: MissionType; job: string }[])
+  private getAvailableSpawn(jobName: string): StructureSpawn | null {
+    return (
+      this.spawns.find(
+        spawn => !this.triggeredSpawns.includes(spawn.name) && !spawn.spawning && this.dryRunSpawnJob(spawn, jobName)
+      ) || null
+    )
   }
 
   private spawnRequiredJobs(): void {
-    const needs = this.checkMissionNeeds()
-    let currentEl = needs.shift()
+    let done = false
+    while (!done) {
+      const result = this.getNextJobRequest()
+      if (!result) {
+        done = true
+        break
+      }
 
-    this.spawns.forEach(spawn => {
-      if (!currentEl) return
-      const job = this.attemptSpawnJob(spawn, currentEl.job)
-      if (!job) return
-      currentEl.mission.assignVillager(job)
+      const spawn = this.getAvailableSpawn(result.job)
+      if (!spawn) {
+        done = true
+        break
+      }
 
-      currentEl = needs.shift()
-    })
+      const job = this.spawnJob(spawn, result.job)
+      if (job) result.mission.assignVillager(job)
+    }
   }
 
   private createMission(type: string): MissionType {
@@ -106,11 +133,8 @@ export class Village<S extends VillageEntry> extends State<S> implements Behavio
   }
   private createMissions(): void {
     console.log(JSON.stringify(this.missions.map(m => `${m.type}:${m.id}`)))
-    if (!this.hasMission('farm')) {
-      this.assignMission(this.createMission('farm'))
-    }
-    if (!this.hasMission('upgrade-room')) {
-      this.assignMission(this.createMission('upgrade-room'))
+    if (!this.hasMission('maintain')) {
+      this.assignMission(this.createMission('maintain'))
     }
   }
 

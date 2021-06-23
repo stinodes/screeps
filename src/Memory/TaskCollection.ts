@@ -22,7 +22,7 @@ export class TaskCollection extends Collection<Task<TaskEntry>> {
       case 'build':
         return Build
       default:
-        return Harvest
+        throw new Error('Not a matching task')
     }
   }
 }
