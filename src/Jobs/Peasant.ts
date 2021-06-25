@@ -20,9 +20,15 @@ export class Peasant extends Job<PeasantEntry, Harvest | Stash> {
   }
 
   protected getNextTask(finishedTask?: Harvest | Stash): Harvest | Stash {
-    if (finishedTask?.type === 'harvest') return this.getStashTask()
-    if (finishedTask?.type === 'Stash') return this.getHarvestTask()
-    return this.getHarvestTask()
+    switch (finishedTask?.type) {
+      case 'harvest':
+        return this.getStashTask()
+      case 'stash':
+        if (this.creep.store.getUsedCapacity() !== 0) return this.getStashTask()
+        return this.getHarvestTask()
+      default:
+        return this.getHarvestTask()
+    }
   }
   private getHarvestTask(): Harvest {
     const harvest = Collections.tasks.create('harvest', Collections.tasks.ID()) as Harvest

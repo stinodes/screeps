@@ -17,8 +17,8 @@ export class Upgrade extends Task<UpgradeEntry> {
 
   public getIsFinished(): boolean {
     const creep = this.creep
-    if (!creep) return false
-    return creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0
+    if (!creep || creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0) return true
+    return false
   }
 
   public run(): void {

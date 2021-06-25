@@ -5,11 +5,10 @@ import { Collections } from '../Memory'
 import { Harvest } from '../Tasks/Harvest'
 import { Upgrade } from '../Tasks/Upgrade'
 
-type BuilderEntry = JobEntry & { room: string; construction: string; storage: string }
+type BuilderEntry = JobEntry & { room: string; construction: string }
 export class Builder extends Job<BuilderEntry, Build | Upgrade | Load | Harvest> {
   public type: 'builder' = 'builder'
   public construction: null | ConstructionSite
-  public storage: null | AnyStoreStructure
   public room: Room
   public body = [WORK, MOVE, CARRY]
 
@@ -30,20 +29,32 @@ export class Builder extends Job<BuilderEntry, Build | Upgrade | Load | Harvest>
     switch (type) {
       case 'load':
       case 'harvest': {
-        if (!this.construction) {
-          return this.getUpgradeTask()
+        if (this.creep.store.getFreeCapacity() !== 0) {
+          return this.getLoadOrHarvestTask()
         }
-        return this.getBuildTask()
+        return this.getBuildOrUpgradeTask()
       }
       case 'build':
       case 'upgrade':
       default: {
-        if (!this.storage) {
-          return this.getHarvestTask()
+        if (this.creep.store.getUsedCapacity() !== 0) {
+          return this.getBuildOrUpgradeTask()
         }
-        return this.getLoadTask()
+        return this.getLoadOrHarvestTask()
       }
     }
+  }
+
+  private getBuildOrUpgradeTask(): Build | Upgrade {
+    if (!this.construction) {
+      return this.getUpgradeTask()
+    }
+    return this.getBuildTask()
+  }
+  private getLoadOrHarvestTask(): Harvest | Load {
+    const storage = this.getStorage()
+    if (storage) return this.getLoadTask()
+    return this.getHarvestTask()
   }
 
   private getHarvestTask(): Harvest {
@@ -54,7 +65,7 @@ export class Builder extends Job<BuilderEntry, Build | Upgrade | Load | Harvest>
   private getLoadTask(): Load {
     const load = Collections.tasks.create('load', Load.ID()) as Load
     const store = this.storage
-    load.store = store
+    load.storage = store
     load.job = this
     return load
   }

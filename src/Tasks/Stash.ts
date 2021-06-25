@@ -19,8 +19,10 @@ export class Stash extends Task<StashEntry> {
   }
   public getIsFinished(): boolean {
     const creep = this.creep
-    if (!creep) return false
-    return creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0
+    const target = this.target
+    if (!creep || creep.store.getUsedCapacity() === 0) return true
+    if (!target || (target.store as Store<RESOURCE_ENERGY, false>).getFreeCapacity() === 0) return true
+    return false
   }
 
   public run(): void {

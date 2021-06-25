@@ -4,22 +4,19 @@ import { Upgrade } from '../Tasks/Upgrade'
 import { Collections } from '../Memory'
 import { Harvest } from '../Tasks/Harvest'
 
-type UpgraderEntry = JobEntry & { room: string; storage: null | string }
+type UpgraderEntry = JobEntry & { room: string }
 export class Upgrader extends Job<UpgraderEntry, Upgrade | Load | Harvest> {
   public type: 'upgrader' = 'upgrader'
   public room: Room
-  public storage: null | AnyStoreStructure
   public body = [WORK, MOVE, CARRY]
 
   public load(memory: UpgraderEntry): void {
     super.load(memory)
     this.room = Game.rooms[memory.room]
-    this.storage = memory.storage ? (Game.getObjectById(memory.storage) as AnyStoreStructure) : null
   }
   public save(): UpgraderEntry {
     const memory = super.save()
     memory.room = this.room.name
-    memory.storage = this.storage?.id || null
     return memory
   }
 
@@ -28,14 +25,17 @@ export class Upgrader extends Job<UpgraderEntry, Upgrade | Load | Harvest> {
     switch (type) {
       case 'load':
       case 'harvest':
+        if (this.creep.store.getFreeCapacity() !== 0) return this.getLoadOrHarvestTask()
         return this.getUpgradeTask()
-      default: {
-        if (!this.storage) {
-          return this.getHarvestTask()
-        }
-        return this.getLoadTask()
-      }
+      default:
+        return this.getLoadOrHarvestTask()
     }
+  }
+
+  private getLoadOrHarvestTask(): Harvest | Load {
+    const storage = this.getStorage()
+    if (storage) return this.getLoadTask()
+    return this.getHarvestTask()
   }
 
   private getHarvestTask(): Harvest {
@@ -45,7 +45,7 @@ export class Upgrader extends Job<UpgraderEntry, Upgrade | Load | Harvest> {
   }
   private getLoadTask(): Load {
     const load = Collections.tasks.create('load', Collections.tasks.ID()) as Load
-    load.store = this.storage
+    load.storage = this.getStorage()
     load.job = this
     return load
   }
@@ -70,9 +70,6 @@ export class Upgrader extends Job<UpgraderEntry, Upgrade | Load | Harvest> {
 
   public update(): void {
     if (this.spawning) return
-    if (this.storage && (this.storage.store as Store<RESOURCE_ENERGY, false>).getUsedCapacity() === 0)
-      this.storage = null
-    if (!this.storage) this.storage = this.getStorage()
     super.update()
   }
   public run(): void {

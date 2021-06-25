@@ -1,33 +1,35 @@
 import { Task, TaskEntry } from './Task'
 
 type LoadEntry = TaskEntry & {
-  store: string
+  storage: string
 }
 
 export class Load extends Task<LoadEntry> {
   public type = 'load'
-  public store: null | AnyStoreStructure
+  public storage: null | AnyStoreStructure
 
   public load(memory: LoadEntry): void {
     super.load(memory)
-    this.store = Game.getObjectById(memory.store)
+    this.storage = Game.getObjectById(memory.storage)
   }
   public save(): LoadEntry {
     const memory = super.save()
-    memory.store = this.store?.id || ''
+    memory.storage = this.storage?.id || ''
     return memory
   }
 
   public getIsFinished(): boolean {
     const creep = this.creep
-    if (!creep) return false
-    return creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0
+    const storage = this.storage
+    if (!creep || creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0) return true
+    if (!storage || (storage.store as Store<RESOURCE_ENERGY, false>).getUsedCapacity() === 0) return true
+    return false
   }
 
   public run(): void {
-    if (!this.store) return
+    if (!this.storage) return
 
-    const result = this.withdraw(this.store)
-    if (result === ERR_NOT_IN_RANGE) this.moveToTarget(this.store.pos)
+    const result = this.withdraw(this.storage)
+    if (result === ERR_NOT_IN_RANGE) this.moveToTarget(this.storage.pos)
   }
 }
