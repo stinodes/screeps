@@ -7,6 +7,7 @@ type LoadEntry = TaskEntry & {
 export class Load extends Task<LoadEntry> {
   public type = 'load'
   public storage: null | AnyStoreStructure
+  public emoji = '🚚'
 
   public load(memory: LoadEntry): void {
     super.load(memory)

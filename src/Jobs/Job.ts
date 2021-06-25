@@ -63,5 +63,6 @@ export abstract class Job<S extends JobEntry, T extends Task<any> = Task<any>> e
   }
   public run(): void {
     if (this.currentTask) this.currentTask.run()
+    this.creep.say(`${this.type.slice(0, 4)}: ${this.currentTask?.emoji || '💤'}`)
   }
 }

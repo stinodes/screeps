@@ -64,7 +64,7 @@ export class Builder extends Job<BuilderEntry, Build | Upgrade | Load | Harvest>
   }
   private getLoadTask(): Load {
     const load = Collections.tasks.create('load', Load.ID()) as Load
-    const store = this.storage
+    const store = this.getStorage()
     load.storage = store
     load.job = this
     return load
@@ -72,6 +72,7 @@ export class Builder extends Job<BuilderEntry, Build | Upgrade | Load | Harvest>
   private getUpgradeTask(): Upgrade {
     const upgrade = Collections.tasks.create('upgrade', Upgrade.ID()) as Upgrade
     upgrade.job = this
+    upgrade.room = this.room
     return upgrade
   }
   private getBuildTask(): Build {
@@ -104,9 +105,6 @@ export class Builder extends Job<BuilderEntry, Build | Upgrade | Load | Harvest>
 
   public update(): void {
     if (this.spawning) return
-    if (this.storage && (this.storage.store as Store<RESOURCE_ENERGY, false>).getUsedCapacity() === 0)
-      this.storage = null
-    if (!this.storage) this.storage = this.getStorage()
     if (!this.construction) this.construction = this.getBuildTarget()
     super.update()
   }

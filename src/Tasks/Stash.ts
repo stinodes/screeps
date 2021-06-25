@@ -7,6 +7,7 @@ type StashEntry = TaskEntry & {
 export class Stash extends Task<StashEntry> {
   public type = 'stash'
   public target: null | AnyStoreStructure
+  public emoji = '🚚'
 
   public load(memory: StashEntry): void {
     super.load(memory)

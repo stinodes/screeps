@@ -7,6 +7,7 @@ type HarvestEntry = TaskEntry & {
 export class Harvest extends Task<HarvestEntry> {
   public type = 'harvest'
   public source: null | Source
+  public emoji = '⛏️'
 
   public load(memory: HarvestEntry): void {
     super.load(memory)
