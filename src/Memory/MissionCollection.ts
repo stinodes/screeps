@@ -10,6 +10,8 @@ export class MissionCollection extends Collection<T> {
     switch (type) {
       case 'maintain':
         return Maintain
+      case 'settle':
+        return Settle
       default:
         throw new Error('Not a matching mission')
     }

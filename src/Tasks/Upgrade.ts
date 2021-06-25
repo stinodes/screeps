@@ -21,6 +21,12 @@ export class Upgrade extends Task<UpgradeEntry> {
     return false
   }
 
+  protected getPathStyle(): PolyStyle {
+    const style = super.getPathStyle()
+    style.stroke = '#cae028'
+    return style
+  }
+
   public run(): void {
     const controller: undefined | StructureController = this.room.controller
     if (!controller) return

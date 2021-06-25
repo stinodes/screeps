@@ -25,6 +25,12 @@ export class Build extends Task<BuildEntry> {
     return creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0 || construction.progress >= construction.progressTotal
   }
 
+  protected getPathStyle(): PolyStyle {
+    const style = super.getPathStyle()
+    style.stroke = '#cae028'
+    return style
+  }
+
   public run(): void {
     if (!this.construction) return
 

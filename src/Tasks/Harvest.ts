@@ -24,6 +24,12 @@ export class Harvest extends Task<HarvestEntry> {
     return false
   }
 
+  protected getPathStyle(): PolyStyle {
+    const style = super.getPathStyle()
+    style.stroke = '#cae028'
+    return style
+  }
+
   public update(): void {
     super.update()
     if (!this.source) this.source = this.creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE)
