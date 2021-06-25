@@ -24,7 +24,7 @@ export class Peasant extends Job<PeasantEntry, Harvest | Stash> {
       case 'harvest':
         return this.getStashTask()
       case 'stash':
-        if (this.creep.store.getUsedCapacity() !== 0) return this.getStashTask()
+        if (this.creep?.store.getUsedCapacity() !== 0) return this.getStashTask()
         return this.getHarvestTask()
       default:
         return this.getHarvestTask()

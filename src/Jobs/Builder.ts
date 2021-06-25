@@ -29,7 +29,7 @@ export class Builder extends Job<BuilderEntry, Build | Upgrade | Load | Harvest>
     switch (type) {
       case 'load':
       case 'harvest': {
-        if (this.creep.store.getFreeCapacity() !== 0) {
+        if (this.creep?.store.getFreeCapacity() !== 0) {
           return this.getLoadOrHarvestTask()
         }
         return this.getBuildOrUpgradeTask()
@@ -37,7 +37,7 @@ export class Builder extends Job<BuilderEntry, Build | Upgrade | Load | Harvest>
       case 'build':
       case 'upgrade':
       default: {
-        if (this.creep.store.getUsedCapacity() !== 0) {
+        if (this.creep?.store.getUsedCapacity() !== 0) {
           return this.getBuildOrUpgradeTask()
         }
         return this.getLoadOrHarvestTask()

@@ -132,7 +132,6 @@ export class Village<S extends VillageEntry> extends State<S> implements Behavio
     return this.missions.some(mission => mission.type === type)
   }
   private createMissions(): void {
-    console.log(JSON.stringify(this.missions.map(m => `${m.type}:${m.id}`)))
     if (!this.hasMission('maintain')) {
       this.assignMission(this.createMission('maintain'))
     }
