@@ -5,7 +5,7 @@ import { Collections } from '../Memory'
 import { Harvest } from '../Tasks/Harvest'
 import { Upgrade } from '../Tasks/Upgrade'
 
-type BuilderEntry = JobEntry & { room: string; construction: string }
+type BuilderEntry = JobEntry & { room: string; construction: null | Id<ConstructionSite> }
 export class Builder extends Job<BuilderEntry, Build | Upgrade | Load | Harvest> {
   public type: 'builder' = 'builder'
   public construction: null | ConstructionSite
@@ -14,12 +14,12 @@ export class Builder extends Job<BuilderEntry, Build | Upgrade | Load | Harvest>
 
   public load(memory: BuilderEntry): void {
     super.load(memory)
-    this.construction = Game.getObjectById(memory.construction)
+    this.construction = memory.construction ? Game.getObjectById(memory.construction) : null
     this.room = Game.rooms[memory.room]
   }
   public save(): BuilderEntry {
     const memory = super.save()
-    memory.construction = this.construction?.id || ''
+    memory.construction = this.construction?.id || null
     memory.room = this.room.name
     return memory
   }

@@ -4,7 +4,7 @@ import { Upgrader } from '../Jobs/Upgrader'
 import { Builder } from '../Jobs/Builder'
 
 type MaintainEntry = MissionEntry & {
-  constructionSites: string[]
+  constructionSites: Id<ConstructionSite>[]
 }
 type Jobs = Builder | Peasant | Upgrader
 
@@ -16,13 +16,17 @@ export class Settle extends Mission<MaintainEntry, Jobs> {
   public load(memory: MaintainEntry): void {
     super.load(memory)
     this.constructionSites = memory.constructionSites
-      .map(id => Game.getObjectById(id))
+      .map(id => Game.getObjectById<ConstructionSite>(id))
       .filter(Boolean) as ConstructionSite[]
   }
   public save(): MaintainEntry {
     const memory = super.save()
     memory.constructionSites = this.constructionSites.map(site => site.id)
     return memory
+  }
+
+  public getIsFinished(): boolean {
+    return false
   }
 
   /**

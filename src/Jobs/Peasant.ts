@@ -3,7 +3,7 @@ import { Harvest } from '../Tasks/Harvest'
 import { Stash } from '../Tasks/Stash'
 import { Collections } from '../Memory'
 
-type PeasantEntry = JobEntry & { room: string; source: string }
+type PeasantEntry = JobEntry & { room: string; source: null | Id<Source> }
 export class Peasant extends Job<PeasantEntry, Harvest | Stash> {
   public type: 'peasant' = 'peasant'
   public source: null | Source
@@ -11,11 +11,11 @@ export class Peasant extends Job<PeasantEntry, Harvest | Stash> {
 
   public load(memory: PeasantEntry): void {
     super.load(memory)
-    this.source = Game.getObjectById(memory.source)
+    this.source = memory.source ? Game.getObjectById(memory.source) : null
   }
   public save(): PeasantEntry {
     const memory = super.save()
-    memory.source = this.source?.id || ''
+    memory.source = this.source?.id || null
     return memory
   }
 

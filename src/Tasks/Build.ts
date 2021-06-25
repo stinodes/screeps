@@ -1,7 +1,7 @@
 import { Task, TaskEntry } from './Task'
 
 type BuildEntry = TaskEntry & {
-  construction: string
+  construction: Id<ConstructionSite> | null
 }
 
 export class Build extends Task<BuildEntry> {
@@ -11,11 +11,11 @@ export class Build extends Task<BuildEntry> {
 
   public load(memory: BuildEntry): void {
     super.load(memory)
-    this.construction = Game.getObjectById(memory.construction)
+    this.construction = memory.construction ? Game.getObjectById(memory.construction) : null
   }
   public save(): BuildEntry {
     const memory = super.save()
-    memory.construction = this.construction?.id || ''
+    memory.construction = this.construction?.id || null
     return memory
   }
 

@@ -1,7 +1,7 @@
 import { Task, TaskEntry } from './Task'
 
 type HarvestEntry = TaskEntry & {
-  source: string
+  source: Id<Source> | null
 }
 
 export class Harvest extends Task<HarvestEntry> {
@@ -11,11 +11,11 @@ export class Harvest extends Task<HarvestEntry> {
 
   public load(memory: HarvestEntry): void {
     super.load(memory)
-    this.source = Game.getObjectById(memory.source)
+    this.source = memory.source ? Game.getObjectById(memory.source) : null
   }
   public save(): HarvestEntry {
     const memory = super.save()
-    memory.source = this.source?.id || ''
+    memory.source = this.source?.id || null
     return memory
   }
 

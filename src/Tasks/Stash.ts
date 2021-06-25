@@ -1,7 +1,7 @@
 import { Task, TaskEntry } from './Task'
 
 type StashEntry = TaskEntry & {
-  target: string
+  target: Id<AnyStoreStructure> | null
 }
 
 export class Stash extends Task<StashEntry> {
@@ -11,11 +11,11 @@ export class Stash extends Task<StashEntry> {
 
   public load(memory: StashEntry): void {
     super.load(memory)
-    this.target = Game.getObjectById(memory.target)
+    this.target = memory.target ? Game.getObjectById(memory.target) : null
   }
   public save(): StashEntry {
     const memory = super.save()
-    memory.target = this.target?.id || ''
+    memory.target = this.target?.id || null
     return memory
   }
   public getIsFinished(): boolean {

@@ -21,7 +21,7 @@ export abstract class Mission<S extends MissionEntry, J extends Job<JobEntry>> e
 
   public save(): S {
     const memory = super.save()
-    memory.finished = this.finished
+    memory.finished = this.getIsFinished()
     memory.jobs = this.jobs.map(job => job.id)
     memory.village = this.village.id
     return memory
@@ -32,6 +32,10 @@ export abstract class Mission<S extends MissionEntry, J extends Job<JobEntry>> e
     this.jobs = memory.jobs.map(id => Collections.jobs.load(id) as J).filter(Boolean)
     this.finished = memory.finished
     this.village = Collections.villages.load(memory.village) as Village<VillageEntry>
+  }
+
+  public getIsFinished(): boolean {
+    return false
   }
 
   public assignVillager(job: J): void {

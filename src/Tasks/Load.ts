@@ -1,7 +1,7 @@
 import { Task, TaskEntry } from './Task'
 
 type LoadEntry = TaskEntry & {
-  storage: string
+  storage: Id<AnyStoreStructure> | null
 }
 
 export class Load extends Task<LoadEntry> {
@@ -11,11 +11,11 @@ export class Load extends Task<LoadEntry> {
 
   public load(memory: LoadEntry): void {
     super.load(memory)
-    this.storage = Game.getObjectById(memory.storage)
+    this.storage = memory.storage ? Game.getObjectById(memory.storage) : null
   }
   public save(): LoadEntry {
     const memory = super.save()
-    memory.storage = this.storage?.id || ''
+    memory.storage = this.storage?.id || null
     return memory
   }
 
@@ -23,7 +23,7 @@ export class Load extends Task<LoadEntry> {
     const creep = this.creep
     const storage = this.storage
     if (!creep || creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0) return true
-    if (!storage || (storage.store as Store<RESOURCE_ENERGY, false>).getUsedCapacity() === 0) return true
+    if (!storage || (storage.store as GenericStore).getUsedCapacity() === 0) return true
     return false
   }
 
