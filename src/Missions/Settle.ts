@@ -3,30 +3,36 @@ import { MissionEntry, Mission } from './Mission'
 import { Upgrader } from '../Jobs/Upgrader'
 import { Builder } from '../Jobs/Builder'
 
-type MaintainEntry = MissionEntry & {
+type Building = { structureType: StructureConstant; pos: { x: number; y: number }; finished: boolean }
+type SettleEntry = MissionEntry & {
   constructionSites: Id<ConstructionSite>[]
+  targetBuildings: Building[]
 }
 type Jobs = Builder | Peasant | Upgrader
 
-export class Settle extends Mission<MaintainEntry, Jobs> {
+export class Settle extends Mission<SettleEntry, Jobs> {
   public type = 'settle'
   public constructionSites: ConstructionSite[] = []
   public autoUpdateSites = true
 
-  public load(memory: MaintainEntry): void {
+  public load(memory: SettleEntry): void {
     super.load(memory)
     this.constructionSites = memory.constructionSites
       .map(id => Game.getObjectById<ConstructionSite>(id))
       .filter(Boolean) as ConstructionSite[]
   }
-  public save(): MaintainEntry {
+  public save(): SettleEntry {
     const memory = super.save()
     memory.constructionSites = this.constructionSites.map(site => site.id)
     return memory
   }
 
   public getIsFinished(): boolean {
-    return false
+    const roomLevel = this.village.controllerLevel
+    const nExtensions = this.village.room.find(FIND_STRUCTURES, {
+      filter: { structureType: STRUCTURE_EXTENSION }
+    }).length
+    return nExtensions === 5 && roomLevel !== null && roomLevel >= 2
   }
 
   /**
@@ -70,6 +76,11 @@ export class Settle extends Mission<MaintainEntry, Jobs> {
 
   private isConstructionFinished(construction: ConstructionSite): boolean {
     return construction.progress >= construction.progressTotal
+  }
+
+  private build(): void {
+    if (this.village.controllerLevel === 2) {
+    }
   }
 
   public update(): void {
