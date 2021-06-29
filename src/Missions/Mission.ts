@@ -10,7 +10,10 @@ export type MissionEntry = Entry & {
   finished: boolean
   village: string
 }
-export abstract class Mission<S extends MissionEntry, J extends Job<JobEntry>> extends State<S> implements Behavior {
+export abstract class Mission<S extends MissionEntry, J extends Job<JobEntry>>
+  extends State<S>
+  implements Behavior
+{
   public type = 'mission'
   public jobs: J[]
   public finished: boolean
@@ -29,9 +32,17 @@ export abstract class Mission<S extends MissionEntry, J extends Job<JobEntry>> e
 
   public load(memory: S): void {
     super.load(memory)
-    this.jobs = memory.jobs.map(id => Collections.jobs.load(id) as J).filter(Boolean)
+    this.jobs = memory.jobs
+      .map(id => Collections.jobs.load(id) as J)
+      .filter(Boolean)
     this.finished = memory.finished
-    this.village = Collections.villages.load(memory.village) as Village<VillageEntry>
+    this.village = Collections.villages.load(
+      memory.village
+    ) as Village<VillageEntry>
+  }
+
+  public get delete(): boolean {
+    return this.finished
   }
 
   public getIsFinished(): boolean {
@@ -54,7 +65,9 @@ export abstract class Mission<S extends MissionEntry, J extends Job<JobEntry>> e
     const requiredJobStrings = this.getRequiredJobs()
 
     const job = requiredJobStrings.find(requiredJob => {
-      const index = currentJobStrings.findIndex(foundJob => requiredJob === foundJob)
+      const index = currentJobStrings.findIndex(
+        foundJob => requiredJob === foundJob
+      )
       if (index === -1) return true
       currentJobStrings.splice(index, 1)
       return false
@@ -68,7 +81,7 @@ export abstract class Mission<S extends MissionEntry, J extends Job<JobEntry>> e
   }
 
   public update(): void {
-    this.finished = this.getFinished()
+    this.finished = this.getIsFinished()
     this.jobs.forEach(job => job.update())
   }
   public run(): void {

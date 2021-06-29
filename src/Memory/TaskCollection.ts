@@ -5,6 +5,7 @@ import { Stash } from '../Tasks/Stash'
 import { Load } from '../Tasks/Load'
 import { Upgrade } from '../Tasks/Upgrade'
 import { Build } from '../Tasks/Build'
+import { Collect } from '../Tasks/Collect'
 
 export class TaskCollection extends Collection<Task<TaskEntry>> {
   public segment = 'tasks'
@@ -19,6 +20,8 @@ export class TaskCollection extends Collection<Task<TaskEntry>> {
         return Upgrade
       case 'load':
         return Load
+      case 'collect':
+        return Collect
       case 'build':
         return Build
       default:

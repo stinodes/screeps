@@ -16,9 +16,9 @@ Some module bundlers even support performing further optimisations like eliminat
 
 From version 3.0 onwards, the starter kit uses Rollup as its main module bundler. Some useful features of Rollup include:
 
-* Bundled modules are entirely flat \(no weird boilerplate code emitted like in Webpack\)
-* Advanced tree-shaking \(eliminates unused modules from the final bundle\)
-* Simpler configuration \(compared to Webpack\)
+- Bundled modules are entirely flat \(no weird boilerplate code emitted like in Webpack\)
+- Advanced tree-shaking \(eliminates unused modules from the final bundle\)
+- Simpler configuration \(compared to Webpack\)
 
 If you're still comfortable with using Webpack, the old version of the starter kit is available [here](https://github.com/screepers/screeps-typescript-starter/tree/legacy/webpack), but moving forward, no new features will be added to the Webpack version.
 
@@ -42,4 +42,3 @@ commonjs({
 ```
 
 **For more info:** [`rollup-plugin-commonjs` docs](https://github.com/rollup/rollup-plugin-commonjs)
-

@@ -2,11 +2,12 @@ import { Peasant } from '../Jobs/Peasant'
 import { MissionEntry, Mission } from './Mission'
 import { Upgrader } from '../Jobs/Upgrader'
 import { Builder } from '../Jobs/Builder'
+import { Courier } from '../Jobs/Courier'
 
 type MaintainEntry = MissionEntry & {
   constructionSites: Id<ConstructionSite>[]
 }
-type Jobs = Builder | Peasant | Upgrader
+type Jobs = Builder | Peasant | Upgrader | Courier
 
 export class Maintain extends Mission<MaintainEntry, Jobs> {
   public type = 'maintain'
@@ -35,17 +36,16 @@ export class Maintain extends Mission<MaintainEntry, Jobs> {
    */
   protected getRequiredJobs(): string[] {
     const sources = this.village.room.find(FIND_SOURCES_ACTIVE)
-    const builders = Math.max(1, Math.ceil(this.constructionSites.length / 4))
+    const nBuilders = Math.max(1, Math.ceil(this.constructionSites.length / 4))
 
+    //  need couriers to make peasants useful
+    const couriers = new Array<string>(sources.length).fill('courier')
     // peasant chunks
-    const workers: (string[] | string)[] = _.chunk(
-      new Array(sources.length).fill('peasant'),
-      Math.ceil(sources.length / 2)
-    )
-    // add middle and end upgrader
-    workers.splice(1, 0, 'upgrader')
+    const peasants = new Array<string>(sources.length).fill('peasant')
+    const workers: (string | string[])[] = _.zip(couriers, peasants)
     // append builders
-    workers.push(new Array(builders).fill('builder'))
+    workers.push('upgrader')
+    workers.push(new Array(nBuilders).fill('builder'))
     const flattenedWorkers = workers.flat()
 
     return flattenedWorkers
@@ -54,7 +54,9 @@ export class Maintain extends Mission<MaintainEntry, Jobs> {
   public assignVillager(job: Jobs): void {
     if (job.type === ('peasant' as const)) {
       const sources = this.village.sources
-      const source = sources.find(s => !this.jobs.some(j => 'source' in j && j.source?.id === s.id))
+      const source = sources.find(
+        s => !this.jobs.some(j => 'source' in j && j.source?.id === s.id)
+      )
       job.source = source || null
     }
     if (job.type === ('builder' as const)) {
@@ -75,10 +77,15 @@ export class Maintain extends Mission<MaintainEntry, Jobs> {
         .filter(site => !this.constructionSites.some(s => site.id === s.id))
       this.constructionSites = [...this.constructionSites, ...newSites]
     }
-    this.constructionSites = this.constructionSites.filter(c => !this.isConstructionFinished(c))
+    this.constructionSites = this.constructionSites.filter(
+      c => !this.isConstructionFinished(c)
+    )
     this.jobs.forEach(job => {
       if (job.type === ('builder' as const)) {
-        if (!job.construction || this.isConstructionFinished(job.construction)) {
+        if (
+          !job.construction ||
+          this.isConstructionFinished(job.construction)
+        ) {
           job.construction = this.constructionSites[0]
         }
       }

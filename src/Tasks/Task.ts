@@ -8,14 +8,23 @@ export type TaskEntry = Entry & {
   job: string
   finished: boolean
 }
+type Upgrades = null | {
+  type: string
+  prop: string
+}
 
-export abstract class Task<S extends TaskEntry> extends State<S> implements Behavior {
+export abstract class Task<S extends TaskEntry>
+  extends State<S>
+  implements Behavior
+{
   public type = 'task'
   public job: Job<any>
   public finished: boolean
   public emoji = '💤'
+  public upgrades: Upgrades = null
 
   public static ID = (): string => Collections.tasks.ID()
+
   /**
    * Extensions & overrides
    */
@@ -43,18 +52,34 @@ export abstract class Task<S extends TaskEntry> extends State<S> implements Beha
    * Extra creep controlling methods
    */
   protected getPathStyle(): PolyStyle {
-    return { stroke: '#fff', lineStyle: 'dashed', strokeWidth: 0.1, opacity: 0.1 }
+    return {
+      stroke: '#fff',
+      lineStyle: 'dashed',
+      strokeWidth: 0.1,
+      opacity: 0.1
+    }
   }
   public get creep(): Creep {
     return Game.creeps[this.job.creepName]
   }
   public moveToTarget(pos: RoomPosition): ScreepsReturnCode {
-    return this.creep?.moveTo(pos.x, pos.y, { visualizePathStyle: this.getPathStyle() })
+    return this.creep?.moveTo(pos.x, pos.y, {
+      visualizePathStyle: this.getPathStyle()
+    })
   }
   public harvest(target: Source | Mineral): ScreepsReturnCode {
     return this.creep?.harvest(target)
   }
-  public transfer(target: Creep | PowerCreep | Structure, resource = RESOURCE_ENERGY): ScreepsReturnCode {
+  public drop(): ScreepsReturnCode {
+    return this.creep?.drop(RESOURCE_ENERGY)
+  }
+  public pickup(resource: Resource): ScreepsReturnCode {
+    return this.creep?.pickup(resource)
+  }
+  public transfer(
+    target: Creep | PowerCreep | Structure,
+    resource = RESOURCE_ENERGY
+  ): ScreepsReturnCode {
     return this.creep?.transfer(target, resource)
   }
   public build(target: ConstructionSite): ScreepsReturnCode {
@@ -63,7 +88,10 @@ export abstract class Task<S extends TaskEntry> extends State<S> implements Beha
   public upgrade(target: StructureController): ScreepsReturnCode {
     return this.creep?.upgradeController(target)
   }
-  public withdraw(target: AnyStoreStructure, resource = RESOURCE_ENERGY): ScreepsReturnCode {
+  public withdraw(
+    target: AnyStoreStructure,
+    resource = RESOURCE_ENERGY
+  ): ScreepsReturnCode {
     return this.creep?.withdraw(target, resource)
   }
 

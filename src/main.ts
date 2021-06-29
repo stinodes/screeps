@@ -44,7 +44,8 @@ const createVillage = () => {
     name: village.id,
     room: room.name,
     missions: [],
-    villagers: []
+    villagers: [],
+    progress: {}
   })
 }
 

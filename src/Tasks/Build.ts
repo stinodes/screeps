@@ -11,7 +11,9 @@ export class Build extends Task<BuildEntry> {
 
   public load(memory: BuildEntry): void {
     super.load(memory)
-    this.construction = memory.construction ? Game.getObjectById(memory.construction) : null
+    this.construction = memory.construction
+      ? Game.getObjectById(memory.construction)
+      : null
   }
   public save(): BuildEntry {
     const memory = super.save()
@@ -22,8 +24,11 @@ export class Build extends Task<BuildEntry> {
   public getIsFinished(): boolean {
     const creep = this.creep
     const construction = this.construction
-    if (!creep || !construction) return false
-    return creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0 || construction.progress >= construction.progressTotal
+    if (!creep || !construction) return true
+    return (
+      creep.store.getUsedCapacity(RESOURCE_ENERGY) === 0 ||
+      construction.progress >= construction.progressTotal
+    )
   }
 
   protected getPathStyle(): PolyStyle {

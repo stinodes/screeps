@@ -2,6 +2,7 @@ import { Collection } from './Collection'
 import { Mission, MissionEntry } from '../Missions/Mission'
 import { Maintain } from '../Missions/Maintain'
 import { Settle } from '../Missions/Settle'
+import { Blank } from '../Missions/Blank'
 
 type T = Mission<MissionEntry, any>
 
@@ -13,6 +14,8 @@ export class MissionCollection extends Collection<T> {
         return Maintain
       case 'settle':
         return Settle
+      case 'blank':
+        return Blank
       default:
         throw new Error('Not a matching mission')
     }

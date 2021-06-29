@@ -22,8 +22,13 @@ export class Load extends Task<LoadEntry> {
   public getIsFinished(): boolean {
     const creep = this.creep
     const storage = this.storage
-    if (!creep || creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0) return true
-    if (!storage || (storage.store as GenericStore).getUsedCapacity() === 0) return true
+    if (!creep || creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0)
+      return true
+    if (
+      !storage ||
+      (storage.store as GenericStore).getUsedCapacity(RESOURCE_ENERGY) === 0
+    )
+      return true
     return false
   }
 

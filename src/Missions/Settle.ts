@@ -1,14 +1,12 @@
-import { Peasant } from '../Jobs/Peasant'
 import { MissionEntry, Mission } from './Mission'
 import { Upgrader } from '../Jobs/Upgrader'
 import { Builder } from '../Jobs/Builder'
+import { Settler } from '../Jobs/Settler'
 
-type Building = { structureType: StructureConstant; pos: { x: number; y: number }; finished: boolean }
 type SettleEntry = MissionEntry & {
   constructionSites: Id<ConstructionSite>[]
-  targetBuildings: Building[]
 }
-type Jobs = Builder | Peasant | Upgrader
+type Jobs = Builder | Settler | Upgrader
 
 export class Settle extends Mission<SettleEntry, Jobs> {
   public type = 'settle'
@@ -49,7 +47,7 @@ export class Settle extends Mission<SettleEntry, Jobs> {
 
     // peasant chunks
     const workers: (string[] | string)[] = _.chunk(
-      new Array(sources.length).fill('peasant'),
+      new Array(sources.length).fill('settler'),
       Math.ceil(sources.length / 2)
     )
     // add middle and end upgrader
@@ -62,9 +60,11 @@ export class Settle extends Mission<SettleEntry, Jobs> {
   }
 
   public assignVillager(job: Jobs): void {
-    if (job.type === ('peasant' as const)) {
+    if (job.type === ('settler' as const)) {
       const sources = this.village.sources
-      const source = sources.find(s => !this.jobs.some(j => 'source' in j && j.source?.id === s.id))
+      const source = sources.find(
+        s => !this.jobs.some(j => 'source' in j && j.source?.id === s.id)
+      )
       job.source = source || null
     }
     if (job.type === ('builder' as const)) {
@@ -79,8 +79,7 @@ export class Settle extends Mission<SettleEntry, Jobs> {
   }
 
   private build(): void {
-    if (this.village.controllerLevel === 2) {
-    }
+    console.log('building not yet implemented :(')
   }
 
   public update(): void {
@@ -90,14 +89,24 @@ export class Settle extends Mission<SettleEntry, Jobs> {
         .filter(site => !this.constructionSites.some(s => site.id === s.id))
       this.constructionSites = [...this.constructionSites, ...newSites]
     }
-    this.constructionSites = this.constructionSites.filter(c => !this.isConstructionFinished(c))
+    this.constructionSites = this.constructionSites.filter(
+      c => !this.isConstructionFinished(c)
+    )
     this.jobs.forEach(job => {
       if (job.type === ('builder' as const)) {
-        if (!job.construction || this.isConstructionFinished(job.construction)) {
+        if (
+          !job.construction ||
+          this.isConstructionFinished(job.construction)
+        ) {
           job.construction = this.constructionSites[0]
         }
       }
     })
     super.update()
+  }
+
+  public run(): void {
+    super.run()
+    this.build()
   }
 }

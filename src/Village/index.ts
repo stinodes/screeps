@@ -5,20 +5,29 @@ import { JobEntry, Job } from '../Jobs/Job'
 import { MissionEntry, Mission } from '../Missions/Mission'
 import { Collections } from '../Memory'
 
-type MissionType = Mission<MissionEntry, any>
+type AnyMission = Mission<MissionEntry, any>
+type AnyJob = Job<JobEntry>
 
+type Progress = {
+  [key: string]: boolean
+}
 export type VillageEntry = Entry & {
   name: string
   room: string
   villagers: string[]
   missions: string[]
+  progress: Progress
 }
-export class Village<S extends VillageEntry> extends State<S> implements Behavior {
+export class Village<S extends VillageEntry>
+  extends State<S>
+  implements Behavior
+{
   public type = 'base'
   public room: Room
-  public villagers: Job<JobEntry>[]
-  public missions: MissionType[]
+  public villagers: AnyJob[]
+  public missions: AnyMission[]
   public spawns: StructureSpawn[]
+  public progress: Progress = {}
   private triggeredSpawns: string[] = []
 
   public static ID = (): string => Collections.villages.ID()
@@ -26,15 +35,23 @@ export class Village<S extends VillageEntry> extends State<S> implements Behavio
   public save(): S {
     const memory = super.save()
     memory.room = this.room.name
-    memory.villagers = this.villagers.filter(villager => !!villager.creep).map(villager => villager.id)
+    memory.villagers = this.villagers
+      .filter(villager => !!villager.creep)
+      .map(villager => villager.id)
     memory.missions = this.missions.map(mission => mission.id)
+    memory.progress = this.progress || {}
     return memory
   }
   public load(memory: S): void {
     super.load(memory)
     this.room = Game.rooms[memory.room]
-    this.villagers = memory.villagers.map(id => Collections.jobs.load(id) as Job<JobEntry>).filter(Boolean)
-    this.missions = memory.missions.map(id => Collections.missions.load(id) as MissionType)
+    this.villagers = memory.villagers
+      .map(id => Collections.jobs.load(id) as AnyJob)
+      .filter(Boolean)
+    this.missions = memory.missions
+      .map(id => Collections.missions.load(id) as AnyMission)
+      .filter(Boolean)
+    this.progress = memory.progress
     this.spawns = this.room.find(FIND_MY_SPAWNS)
   }
 
@@ -45,14 +62,17 @@ export class Village<S extends VillageEntry> extends State<S> implements Behavio
     return this.room.controller?.level || null
   }
 
-  private getNextJobRequest(): null | { mission: MissionType; job: string } {
+  public hasJobRequests(): boolean {
+    return !!this.getNextJobRequest()
+  }
+  private getNextJobRequest(): null | { mission: AnyMission; job: string } {
     return this.missions.reduce((prev, mission) => {
       if (prev) return prev
       const job = mission.requestJob()
       console.log('requested job:', job)
       if (job) return { mission, job }
       return null
-    }, null as null | { mission: MissionType; job: string })
+    }, null as null | { mission: AnyMission; job: string })
   }
 
   private dryRunSpawnJob(spawn: StructureSpawn, jobName: string): boolean {
@@ -67,7 +87,21 @@ export class Village<S extends VillageEntry> extends State<S> implements Behavio
     return dryRunResult === 0
   }
 
-  private spawnJob(spawn: StructureSpawn, jobName: string): void | Job<JobEntry> {
+  private destroyUpgradedJobs(newJob: AnyJob): void {
+    const upgrades = newJob.upgrades
+    if (!upgrades) return
+    const upgradedJobs = this.villagers.filter(
+      job =>
+        job.type === upgrades.type &&
+        (job as { [key: string]: any })[upgrades.prop] ===
+          (newJob as { [key: string]: any })[upgrades.prop]
+    )
+    upgradedJobs.forEach(job => {
+      job.creep.suicide()
+    })
+  }
+
+  private spawnJob(spawn: StructureSpawn, jobName: string): void | AnyJob {
     if (this.triggeredSpawns.includes(spawn.name)) return
 
     const id = Job.ID()
@@ -91,7 +125,10 @@ export class Village<S extends VillageEntry> extends State<S> implements Behavio
   private getAvailableSpawn(jobName: string): StructureSpawn | null {
     return (
       this.spawns.find(
-        spawn => !this.triggeredSpawns.includes(spawn.name) && !spawn.spawning && this.dryRunSpawnJob(spawn, jobName)
+        spawn =>
+          !this.triggeredSpawns.includes(spawn.name) &&
+          !spawn.spawning &&
+          this.dryRunSpawnJob(spawn, jobName)
       ) || null
     )
   }
@@ -112,11 +149,35 @@ export class Village<S extends VillageEntry> extends State<S> implements Behavio
       }
 
       const job = this.spawnJob(spawn, result.job)
-      if (job) result.mission.assignVillager(job)
+      if (job) {
+        result.mission.assignVillager(job)
+        // destroy upgraded villagers AFTER assignment
+        this.destroyUpgradedJobs(job)
+      }
     }
   }
 
-  private createMission(type: string): MissionType {
+  /**
+   * emergency function, kind of
+   */
+  public manualSpawn(jobName: string): void {
+    const spawn = this.getAvailableSpawn(jobName)
+    if (!spawn) throw Error('No spawn that can spawn this job :(')
+    const job = this.spawnJob(spawn, jobName)
+    if (!job) throw Error('Something went wrong while spawning :(')
+    const blank = this.findMission('blank')
+    if (blank) blank.assignVillager(job)
+  }
+
+  private reassignVillagers(): void {
+    const blank = this.missions.find(mission => mission.type === 'blank')
+    if (!blank) return
+    this.villagers.forEach(job => {
+      if (!job.mission) blank.assignVillager(job)
+    })
+  }
+
+  private createMission(type: string): AnyMission {
     const id = Collections.missions.ID()
     const mission = Collections.missions.create(type, id)
     mission.jobs = []
@@ -124,23 +185,35 @@ export class Village<S extends VillageEntry> extends State<S> implements Behavio
     mission.finished = false
     return mission
   }
-  private assignMission(mission: MissionType) {
+  private assignMission(mission: AnyMission) {
     console.log('Assigning mission', mission.type)
     this.missions = [...this.missions, mission]
   }
+  private findMission(type: string): void | AnyMission {
+    return this.missions.find(mission => mission.type === type)
+  }
   private hasMission(type: string): boolean {
-    return this.missions.some(mission => mission.type === type)
+    return !!this.findMission(type)
   }
   private createMissions(): void {
-    if (!this.hasMission('maintain')) {
+    if (!this.hasMission('blank'))
+      this.assignMission(this.createMission('blank'))
+    if (!this.hasMission('settle') && !this.progress.settle) {
+      this.assignMission(this.createMission('settle'))
+    }
+    if (!this.hasMission('maintain') && this.progress.settle) {
       this.assignMission(this.createMission('maintain'))
     }
   }
 
   public update(): void {
     this.createMissions()
+    this.reassignVillagers()
     this.spawnRequiredJobs()
-    return this.missions.forEach(mission => mission.update())
+    this.missions.forEach(mission => {
+      mission.update()
+      if (mission.finished) this.progress[mission.type] = true
+    })
   }
   public run(): void {
     return this.missions.forEach(mission => mission.run())

@@ -6,7 +6,9 @@ export class State<S extends Entry> {
   public id: string
 
   public static ID(): string {
-    console.warn('Using "State"-base ID function. Cannot guarantee duplicate-free IDs.')
+    console.warn(
+      'Using "State"-base ID function. Cannot guarantee duplicate-free IDs.'
+    )
     return uuid.create().toString()
   }
   public constructor(id: string) {

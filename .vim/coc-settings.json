@@ -1,0 +1,4 @@
+{
+  "eslint.autoFixOnSave": false,
+  "eslint.format.enable": false
+}

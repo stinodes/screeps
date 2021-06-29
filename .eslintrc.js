@@ -54,7 +54,17 @@ module.exports = {
     'eol-last': 'off',
     eqeqeq: ['error', 'smart'],
     'guard-for-in': 'off',
-    'id-blacklist': ['error', 'any', 'Number', 'number', 'String', 'string', 'Boolean', 'boolean', 'Undefined'],
+    'id-blacklist': [
+      'error',
+      'any',
+      'Number',
+      'number',
+      'String',
+      'string',
+      'Boolean',
+      'boolean',
+      'Undefined'
+    ],
     'id-match': 'error',
     'interface-over-type': 'off',
     'linebreak-style': 'off',
