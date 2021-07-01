@@ -25,9 +25,7 @@ export class Stash extends Task<StashEntry> {
       return true
     if (
       !target ||
-      !(target.store as Store<RESOURCE_ENERGY, false>).getFreeCapacity(
-        RESOURCE_ENERGY
-      )
+      (target.store as GenericStore).getFreeCapacity(RESOURCE_ENERGY) === 0
     )
       return true
     return false

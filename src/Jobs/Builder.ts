@@ -3,20 +3,19 @@ import { Load } from '../Tasks/Load'
 import { Build } from '../Tasks/Build'
 import { Harvest } from '../Tasks/Harvest'
 import { Upgrade } from '../Tasks/Upgrade'
-import { LoadTarget } from '../Target/LoadTarget'
 import { BuildTarget } from '../Target/BuildTarget'
-import { SourceTarget } from '../Target/SourceTarget'
-import { StoreTarget } from '../Target/StoreTarget'
 import { Stash } from '../Tasks/Stash'
+import { Collect } from '../Tasks/Collect'
 
 type BuilderEntry = JobEntry & { construction: null | Id<ConstructionSite> }
 export class Builder extends Job<
   BuilderEntry,
-  Build | Stash | Upgrade | Load | Harvest
+  Build | Stash | Upgrade | Load | Harvest | Collect
 > {
   public type: 'builder' = 'builder'
   public construction: null | ConstructionSite
   public body = [WORK, MOVE, MOVE, CARRY, CARRY]
+  public step: 'build' | 'load' = 'load'
 
   public load(memory: BuilderEntry): void {
     super.load(memory)
@@ -30,51 +29,15 @@ export class Builder extends Job<
     return memory
   }
 
-  protected getNextTask(
-    finishedTask?: Build | Stash | Upgrade | Load | Harvest
-  ): Build | Stash | Upgrade | Load | Harvest {
-    const type = finishedTask?.type
-
-    switch (type) {
-      case 'load':
-      case 'harvest': {
-        if (this.creep?.store.getFreeCapacity() !== 0) {
-          return this.getLoadOrHarvestTask()
-        }
-        return this.getUseEnergyTask()
-      }
-      case 'build':
-      case 'upgrade':
-      default: {
-        if (this.creep?.store.getUsedCapacity() !== 0) {
-          return this.getUseEnergyTask()
-        }
-        return this.getLoadOrHarvestTask()
-      }
+  protected getNextTask(): Build | Stash | Upgrade | Load | Harvest | Collect {
+    if (this.step === 'build') {
+      return this.getUseResourceTask(['stash'])
     }
+    return this.getFetchResourceTask()
   }
-
-  private getUseEnergyTask(): Build | Stash | Upgrade {
-    const buildTarget = BuildTarget.fromJob(BuildTarget, this)
-    if (buildTarget.exists) {
-      return this.getBuildTask(buildTarget)
-    }
-
-    const storeTarget = StoreTarget.fromJob(StoreTarget, this)
-    if (storeTarget.exists) {
-      return this.getStashTask(storeTarget)
-    }
-
-    return this.getUpgradeTask()
-  }
-  private getLoadOrHarvestTask(): Harvest | Load {
-    const buildTarget = BuildTarget.fromJob(BuildTarget, this)
-
-    if (buildTarget.exists) {
-      const loadTarget = LoadTarget.fromJob(LoadTarget, this)
-      if (loadTarget.exists) return this.getLoadTask(loadTarget)
-    }
-    return this.getHarvestTask(SourceTarget.fromJob(SourceTarget, this))
+  protected onTaskFinish(): void {
+    if (this.getFreeCapacity() === 0) this.step = 'build'
+    else if (this.getUsedCapacity() === 0) this.step = 'load'
   }
 
   public update(): void {
@@ -84,9 +47,5 @@ export class Builder extends Job<
       if (target.exists) this.construction = target.target
     }
     super.update()
-  }
-  public run(): void {
-    if (this.spawning) return
-    super.run()
   }
 }

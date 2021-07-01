@@ -46,12 +46,12 @@ export class Settle extends Mission<SettleEntry, Jobs> {
     const builders = Math.max(1, Math.ceil(this.constructionSites.length / 4))
 
     // peasant chunks
-    const workers: (string[] | string)[] = _.chunk(
-      new Array(sources.length).fill('settler'),
-      Math.ceil(sources.length / 2)
-    )
+    const workers: (string[] | string)[] = new Array<string>(
+      sources.length
+    ).fill('settler')
+
     // add middle and end upgrader
-    workers.splice(1, 0, 'upgrader')
+    workers.push('upgrader')
     // append builders
     workers.push(new Array(builders).fill('builder'))
     const flattenedWorkers = workers.flat()

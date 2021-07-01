@@ -1,11 +1,13 @@
 import { Job, JobEntry } from './Job'
 import { Harvest } from '../Tasks/Harvest'
+import { Collections } from '../Memory'
 
 type PeasantEntry = JobEntry & { room: string; source: null | Id<Source> }
 export class Peasant extends Job<PeasantEntry, Harvest> {
   public type: 'peasant' = 'peasant'
   public source: null | Source
   public body = [MOVE, MOVE, CARRY, WORK, WORK, WORK, WORK]
+  public step: 'harvest' = 'harvest'
   public upgrades = {
     type: 'settler',
     prop: 'source'
@@ -23,6 +25,15 @@ export class Peasant extends Job<PeasantEntry, Harvest> {
 
   protected getNextTask(): Harvest {
     return this.getHarvestTask()
+  }
+  protected getHarvestTask(): Harvest {
+    const harvest = Collections.tasks.create(
+      'harvest',
+      Collections.tasks.ID()
+    ) as Harvest
+    harvest.source = this.source
+    harvest.job = this
+    return harvest
   }
 
   public update(): void {

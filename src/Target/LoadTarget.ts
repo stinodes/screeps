@@ -28,7 +28,7 @@ export class LoadTarget extends Target<AnyStoreStructure> {
     if (extensions.length) return extensions[0] // Spawn if no storages & no spawning & no extensions
 
     const spawns = this.village.spawns.filter(
-      spawn => spawn.store.getUsedCapacity() !== 0
+      spawn => spawn.store.getUsedCapacity(RESOURCE_ENERGY) >= 50
     )
     if (spawns.length) return spawns[0]
 

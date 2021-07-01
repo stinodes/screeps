@@ -24,6 +24,7 @@ export type JobEntry = Entry & {
   currentTask: string
   previousTask: string
   creepName: string
+  step: string
   mission: string
   room: string
 }
@@ -37,11 +38,7 @@ export abstract class Job<S extends JobEntry, T extends Task<any> = Task<any>>
   public mission: Mission<MissionEntry, any>
   public body: BodyPartConstant[]
   public upgrades: JobUpgradeTarget | null = null
-
-  /**
-   * Optional members
-   */
-  public source?: Source | null
+  public step: string
 
   public static ID = (): string => Collections.jobs.ID()
 
@@ -56,6 +53,7 @@ export abstract class Job<S extends JobEntry, T extends Task<any> = Task<any>>
       any
     >
     this.creepName = memory.creepName
+    this.step = memory.step
     this.room = Game.rooms[memory.room]
   }
   public save(): S {
@@ -64,6 +62,7 @@ export abstract class Job<S extends JobEntry, T extends Task<any> = Task<any>>
     memory.creepName = this.creepName
     memory.mission = this.mission.id
     memory.room = this.room.name
+    memory.step = this.step
     return memory
   }
 
@@ -82,24 +81,46 @@ export abstract class Job<S extends JobEntry, T extends Task<any> = Task<any>>
     return Game.creeps[this.creepName]
   }
 
+  public getFreeCapacity(resource: ResourceConstant = RESOURCE_ENERGY): number {
+    return this.creep.store.getFreeCapacity(resource)
+  }
+  public getUsedCapacity(resource: ResourceConstant = RESOURCE_ENERGY): number {
+    return this.creep.store.getUsedCapacity(resource)
+  }
+
   /**
    * Overloadable API
    */
   protected getNextTask(finishedTask?: null | T): T | null {
     return finishedTask || null
   }
+  protected onTaskFinish(finishedTask?: null | T): void {
+    return
+  }
 
   /**
    * Task initialization
    */
-
+  // Fetching resources
+  protected getFetchResourceTask(
+    blackList: string[] = []
+  ): Harvest | Collect | Load {
+    const loadTarget = LoadTarget.fromJob(LoadTarget, this)
+    if (loadTarget.exists && !blackList.includes('load')) {
+      return this.getLoadTask(loadTarget)
+    }
+    const resourceTarget = ResourceTarget.fromJob(ResourceTarget, this)
+    if (resourceTarget.exists && !blackList.includes('collect')) {
+      return this.getCollectTask(resourceTarget)
+    }
+    return this.getHarvestTask()
+  }
   protected getHarvestTask(target?: SourceTarget): Harvest {
     const harvest = Collections.tasks.create(
       'harvest',
       Collections.tasks.ID()
     ) as Harvest
-    if ('source' in this && this.source) harvest.source = this.source
-    else if (target) harvest.source = target.target
+    if (target) harvest.source = target.target
     else harvest.source = null
     harvest.job = this
     return harvest
@@ -120,6 +141,20 @@ export abstract class Job<S extends JobEntry, T extends Task<any> = Task<any>>
     return load
   }
 
+  // Using resources
+  protected getUseResourceTask(
+    blackList: string[] = []
+  ): Stash | Build | Upgrade {
+    const stashTarget = StoreTarget.fromJob(StoreTarget, this)
+    if (stashTarget.exists && !blackList.includes('stash')) {
+      return this.getStashTask(stashTarget)
+    }
+    const buildTarget = BuildTarget.fromJob(BuildTarget, this)
+    if (buildTarget.exists && !blackList.includes('build')) {
+      return this.getBuildTask(buildTarget)
+    }
+    return this.getUpgradeTask()
+  }
   protected getStashTask(target: StoreTarget): Stash {
     const stash = Collections.tasks.create(
       'stash',
@@ -148,8 +183,10 @@ export abstract class Job<S extends JobEntry, T extends Task<any> = Task<any>>
     if (!this.currentTask) {
       this.currentTask = this.getNextTask()
     }
-    if (this.currentTask && this.currentTask.finished)
+    if (this.currentTask && this.currentTask.finished) {
+      this.onTaskFinish(this.currentTask)
       this.currentTask = this.getNextTask(this.currentTask)
+    }
 
     if (this.currentTask) this.currentTask.update()
   }

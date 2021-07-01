@@ -69,7 +69,6 @@ export class Village<S extends VillageEntry>
     return this.missions.reduce((prev, mission) => {
       if (prev) return prev
       const job = mission.requestJob()
-      console.log('requested job:', job)
       if (job) return { mission, job }
       return null
     }, null as null | { mission: AnyMission; job: string })
@@ -137,6 +136,7 @@ export class Village<S extends VillageEntry>
     let done = false
     while (!done) {
       const result = this.getNextJobRequest()
+      console.log('requested job:', result?.job)
       if (!result) {
         done = true
         break

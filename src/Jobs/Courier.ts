@@ -22,22 +22,17 @@ export class Courier extends Job<CourierEntry, Tasks> {
     CARRY
   ]
 
-  protected getNextTask(finishedTask?: Tasks): Tasks {
-    const resourceTarget = ResourceTarget.fromJob(ResourceTarget, this)
-    const stashTarget = StoreTarget.fromJob(StoreTarget, this)
-    switch (finishedTask?.type) {
-      case 'stash':
-        if (this.creep.store.getUsedCapacity(RESOURCE_ENERGY) !== 0)
-          return this.getStashTask(stashTarget)
-        return this.getCollectTask(resourceTarget)
-      default: {
-        if (
-          this.creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0 ||
-          !resourceTarget.exists
-        )
-          return this.getStashTask(stashTarget)
-        return this.getCollectTask(resourceTarget)
-      }
+  protected getNextTask(): Tasks {
+    if (this.step === 'stashing') {
+      const stashTarget = StoreTarget.fromJob(StoreTarget, this)
+      if (stashTarget.exists) return this.getStashTask(stashTarget)
     }
+    const resourceTarget = ResourceTarget.fromJob(ResourceTarget, this)
+    return this.getCollectTask(resourceTarget)
+  }
+  protected onTaskFinish(): void {
+    if (this.getFreeCapacity(RESOURCE_ENERGY) === 0) this.step = 'stashing'
+    else if (this.getUsedCapacity(RESOURCE_ENERGY) === 0)
+      this.step = 'gathering'
   }
 }

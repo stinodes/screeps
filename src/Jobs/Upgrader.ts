@@ -2,13 +2,17 @@ import { Job, JobEntry } from './Job'
 import { Load } from '../Tasks/Load'
 import { Upgrade } from '../Tasks/Upgrade'
 import { Harvest } from '../Tasks/Harvest'
-import { LoadTarget } from '../Target/LoadTarget'
+import { Collect } from '../Tasks/Collect'
 
 type UpgraderEntry = JobEntry & { room: string }
-export class Upgrader extends Job<UpgraderEntry, Upgrade | Load | Harvest> {
+export class Upgrader extends Job<
+  UpgraderEntry,
+  Upgrade | Load | Harvest | Collect
+> {
   public type: 'upgrader' = 'upgrader'
   public room: Room
   public body = [WORK, MOVE, MOVE, CARRY, CARRY]
+  public step: 'upgrade' | 'load' = 'load'
 
   public load(memory: UpgraderEntry): void {
     super.load(memory)
@@ -20,25 +24,13 @@ export class Upgrader extends Job<UpgraderEntry, Upgrade | Load | Harvest> {
     return memory
   }
 
-  protected getNextTask(
-    finishedTask?: Upgrade | Load | Harvest
-  ): Upgrade | Load | Harvest {
-    const type = finishedTask?.type
-    switch (type) {
-      case 'load':
-      case 'harvest':
-        if (this.creep.store.getFreeCapacity() !== 0)
-          return this.getLoadOrHarvestTask()
-        return this.getUpgradeTask()
-      default:
-        return this.getLoadOrHarvestTask()
-    }
+  protected getNextTask(): Upgrade | Load | Harvest | Collect {
+    if (this.step === 'upgrade') return this.getUpgradeTask()
+    return this.getFetchResourceTask()
   }
-
-  private getLoadOrHarvestTask(): Harvest | Load {
-    const loadTarget = LoadTarget.fromJob(LoadTarget, this)
-    if (loadTarget.exists) return this.getLoadTask(loadTarget)
-    return this.getHarvestTask()
+  protected onTaskFinish(): void {
+    if (this.getFreeCapacity() === 0) this.step = 'upgrade'
+    if (this.getUsedCapacity() === 0) this.step = 'load'
   }
 
   public update(): void {
