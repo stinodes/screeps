@@ -54,7 +54,7 @@ export class Settle extends Mission<SettleEntry, Jobs> {
     workers.push('upgrader')
     // append builders
     workers.push(new Array(builders).fill('builder'))
-    const flattenedWorkers = workers.flat()
+    const flattenedWorkers = _.flatten(workers)
 
     return flattenedWorkers
   }
@@ -79,7 +79,7 @@ export class Settle extends Mission<SettleEntry, Jobs> {
   }
 
   private build(): void {
-    console.log('building not yet implemented :(')
+    return
   }
 
   public update(): void {

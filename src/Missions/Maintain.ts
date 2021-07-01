@@ -46,7 +46,7 @@ export class Maintain extends Mission<MaintainEntry, Jobs> {
     // append builders
     workers.push('upgrader')
     workers.push(new Array(nBuilders).fill('builder'))
-    const flattenedWorkers = workers.flat()
+    const flattenedWorkers = _.flatten(workers)
 
     return flattenedWorkers
   }

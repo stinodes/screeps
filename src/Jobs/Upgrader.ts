@@ -11,7 +11,7 @@ export class Upgrader extends Job<
 > {
   public type: 'upgrader' = 'upgrader'
   public room: Room
-  public body = [WORK, MOVE, MOVE, CARRY, CARRY]
+  public body = [WORK, WORK, MOVE, CARRY]
   public step: 'upgrade' | 'load' = 'load'
 
   public load(memory: UpgraderEntry): void {

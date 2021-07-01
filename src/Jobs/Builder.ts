@@ -14,7 +14,7 @@ export class Builder extends Job<
 > {
   public type: 'builder' = 'builder'
   public construction: null | ConstructionSite
-  public body = [WORK, MOVE, MOVE, CARRY, CARRY]
+  public body = [WORK, WORK, MOVE, CARRY]
   public step: 'build' | 'load' = 'load'
 
   public load(memory: BuilderEntry): void {

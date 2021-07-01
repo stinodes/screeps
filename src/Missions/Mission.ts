@@ -82,7 +82,10 @@ export abstract class Mission<S extends MissionEntry, J extends Job<JobEntry>>
 
   public update(): void {
     this.finished = this.getIsFinished()
-    this.jobs.forEach(job => job.update())
+    this.jobs.forEach(job => {
+      if (!job.creep) this.removeUnits(job.id)
+      job.update()
+    })
   }
   public run(): void {
     return this.jobs.forEach(job => job.run())

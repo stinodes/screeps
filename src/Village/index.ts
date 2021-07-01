@@ -22,13 +22,13 @@ export class Village<S extends VillageEntry>
   extends State<S>
   implements Behavior
 {
-  public type = 'base'
-  public room: Room
-  public villagers: AnyJob[]
-  public missions: AnyMission[]
-  public spawns: StructureSpawn[]
-  public progress: Progress = {}
+  private roomName: string
   private triggeredSpawns: string[] = []
+
+  public type = 'base'
+  public missions: AnyMission[]
+  public progress: Progress = {}
+  public villagers: AnyJob[]
 
   public static ID = (): string => Collections.villages.ID()
 
@@ -44,7 +44,7 @@ export class Village<S extends VillageEntry>
   }
   public load(memory: S): void {
     super.load(memory)
-    this.room = Game.rooms[memory.room]
+    this.roomName = memory.room
     this.villagers = memory.villagers
       .map(id => Collections.jobs.load(id) as AnyJob)
       .filter(Boolean)
@@ -52,14 +52,19 @@ export class Village<S extends VillageEntry>
       .map(id => Collections.missions.load(id) as AnyMission)
       .filter(Boolean)
     this.progress = memory.progress
-    this.spawns = this.room.find(FIND_MY_SPAWNS)
   }
 
-  public get sources(): Source[] {
-    return this.room.find(FIND_SOURCES_ACTIVE)
-  }
   public get controllerLevel(): null | number {
     return this.room.controller?.level || null
+  }
+  public get spawns(): StructureSpawn[] {
+    return this.room.find(FIND_MY_SPAWNS)
+  }
+  public get room(): Room {
+    return Game.rooms[this.roomName]
+  }
+  public get sources(): Source[] {
+    return this.room.find(FIND_SOURCES_ACTIVE)
   }
 
   public hasJobRequests(): boolean {
@@ -113,7 +118,7 @@ export class Village<S extends VillageEntry>
     })
 
     if (result !== 0) {
-      return
+      return console.log('Error spawning job:, ', result)
     }
 
     this.triggeredSpawns.push(spawn.name)
@@ -207,6 +212,7 @@ export class Village<S extends VillageEntry>
   }
 
   public update(): void {
+    this.triggeredSpawns = []
     this.createMissions()
     this.reassignVillagers()
     this.spawnRequiredJobs()

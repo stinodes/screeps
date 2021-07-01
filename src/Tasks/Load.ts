@@ -30,7 +30,7 @@ export class Load extends Task<LoadEntry> {
       return true
     if (
       storage.structureType === STRUCTURE_SPAWN &&
-      storage.store.getUsedCapacity(RESOURCE_ENERGY) < 10
+      storage.store.getUsedCapacity(RESOURCE_ENERGY) < 20
     )
       return true
 
