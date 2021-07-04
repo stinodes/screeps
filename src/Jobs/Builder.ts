@@ -6,11 +6,12 @@ import { Upgrade } from '../Tasks/Upgrade'
 import { BuildTarget } from '../Target/BuildTarget'
 import { Stash } from '../Tasks/Stash'
 import { Collect } from '../Tasks/Collect'
+import { Repair } from '../Tasks/Repair'
 
 type BuilderEntry = JobEntry & { construction: null | Id<ConstructionSite> }
 export class Builder extends Job<
   BuilderEntry,
-  Build | Stash | Upgrade | Load | Harvest | Collect
+  Build | Repair | Stash | Upgrade | Load | Harvest | Collect
 > {
   public type: 'builder' = 'builder'
   public construction: null | ConstructionSite
@@ -29,12 +30,21 @@ export class Builder extends Job<
     return memory
   }
 
-  protected getNextTask(): Build | Stash | Upgrade | Load | Harvest | Collect {
+  protected getNextTask():
+    | Build
+    | Repair
+    | Stash
+    | Upgrade
+    | Load
+    | Harvest
+    | Collect {
     if (this.step === 'build') {
+      console.log('get use resource task')
       return this.getUseResourceTask(['stash'])
     }
     return this.getFetchResourceTask()
   }
+
   protected onTaskFinish(): void {
     if (this.getFreeCapacity() === 0) this.step = 'build'
     else if (this.getUsedCapacity() === 0) this.step = 'load'

@@ -36,17 +36,18 @@ export class Maintain extends Mission<MaintainEntry, Jobs> {
    */
   protected getRequiredJobs(): string[] {
     const sources = this.village.room.find(FIND_SOURCES_ACTIVE)
-    const nBuilders = Math.max(1, Math.ceil(this.constructionSites.length / 4))
+    const nBuilders = this.village.controllerLevel || 1
 
     //  need couriers to make peasants useful
-    const couriers = new Array<string>(sources.length).fill('courier')
+    const couriers = new Array<string>(sources.length * 2).fill('courier')
     // peasant chunks
     const peasants = new Array<string>(sources.length).fill('peasant')
     const workers: (string | string[])[] = _.zip(couriers, peasants)
     // append builders
     workers.push('upgrader')
+    workers.push('upgrader')
     workers.push(new Array(nBuilders).fill('builder'))
-    const flattenedWorkers = _.flatten(workers)
+    const flattenedWorkers = _.flatten(workers).filter(Boolean)
 
     return flattenedWorkers
   }
@@ -57,11 +58,33 @@ export class Maintain extends Mission<MaintainEntry, Jobs> {
       const source = sources.find(
         s => !this.jobs.some(j => 'source' in j && j.source?.id === s.id)
       )
-      job.source = source || null
+      if (source) {
+        job.source = source || null
+        job.flag = source.pos.findClosestByRange(FIND_FLAGS, {
+          filter: flag => flag.name.indexOf('harvest') !== -1
+        })
+      }
     }
     if (job.type === ('builder' as const)) {
       const site = this.constructionSites[0]
       job.construction = site || null
+    }
+    if (job.type === ('courier' as const)) {
+      const flags = this.village.room.find(FIND_FLAGS, {
+        filter: flag => flag.name.indexOf('harvest') !== -1
+      })
+      const unassignedFlag =
+        flags.find(
+          flag =>
+            this.jobs.filter(
+              j =>
+                j.type === 'courier' &&
+                'flag' in j &&
+                j.flag &&
+                j.flag.name === flag.name
+            ).length !== 2
+        ) || null
+      if (unassignedFlag) job.flag = unassignedFlag
     }
     return super.assignVillager(job)
   }

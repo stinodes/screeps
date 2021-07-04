@@ -15,6 +15,11 @@ import { ResourceTarget } from '../Target/ResourceTarget'
 import { Collect } from '../Tasks/Collect'
 import { LoadTarget } from '../Target/LoadTarget'
 import { Load } from '../Tasks/Load'
+import { RepairTarget } from '../Target/RepairTarget'
+import { Repair } from '../Tasks/Repair'
+import { TransferTarget } from '../Target/TransferTarget'
+import { Transfer } from '../Tasks/Transfer'
+import { MoveTo } from '../Tasks/MoveTo'
 
 export type JobUpgradeTarget = {
   type: string
@@ -39,6 +44,8 @@ export abstract class Job<S extends JobEntry, T extends Task<any> = Task<any>>
   public body: BodyPartConstant[]
   public upgrades: JobUpgradeTarget | null = null
   public step: string
+  public transferable = true
+  public transferring = false
 
   public static ID = (): string => Collections.jobs.ID()
 
@@ -82,9 +89,11 @@ export abstract class Job<S extends JobEntry, T extends Task<any> = Task<any>>
   }
 
   public getFreeCapacity(resource: ResourceConstant = RESOURCE_ENERGY): number {
+    if (!this.creep) return 0
     return this.creep.store.getFreeCapacity(resource)
   }
   public getUsedCapacity(resource: ResourceConstant = RESOURCE_ENERGY): number {
+    if (!this.creep) return 0
     return this.creep.store.getUsedCapacity(resource)
   }
 
@@ -101,6 +110,16 @@ export abstract class Job<S extends JobEntry, T extends Task<any> = Task<any>>
   /**
    * Task initialization
    */
+  // Misc
+  protected getMoveToTask(position: RoomPosition): MoveTo {
+    const moveTo = Collections.tasks.create(
+      'moveto',
+      Collections.tasks.ID()
+    ) as MoveTo
+    moveTo.position = position
+    moveTo.job = this
+    return moveTo
+  }
   // Fetching resources
   protected getFetchResourceTask(
     blackList: string[] = []
@@ -144,10 +163,14 @@ export abstract class Job<S extends JobEntry, T extends Task<any> = Task<any>>
   // Using resources
   protected getUseResourceTask(
     blackList: string[] = []
-  ): Stash | Build | Upgrade {
+  ): Stash | Repair | Build | Upgrade {
     const stashTarget = StoreTarget.fromJob(StoreTarget, this)
     if (stashTarget.exists && !blackList.includes('stash')) {
       return this.getStashTask(stashTarget)
+    }
+    const repairTarget = RepairTarget.fromJob(RepairTarget, this)
+    if (repairTarget.exists && !blackList.includes('repair')) {
+      return this.getRepairTask(repairTarget)
     }
     const buildTarget = BuildTarget.fromJob(BuildTarget, this)
     if (buildTarget.exists && !blackList.includes('build')) {
@@ -164,6 +187,21 @@ export abstract class Job<S extends JobEntry, T extends Task<any> = Task<any>>
     stash.job = this
     return stash
   }
+  protected getTransferTask(target: TransferTarget): Transfer {
+    const transfer = Collections.tasks.create(
+      'transfer',
+      Collections.tasks.ID()
+    ) as Transfer
+    transfer.target = target.target
+    transfer.job = this
+    return transfer
+  }
+  protected getRepairTask(target: RepairTarget): Repair {
+    const repair = Collections.tasks.create('repair', Build.ID()) as Repair
+    repair.building = target.target
+    repair.job = this
+    return repair
+  }
   protected getBuildTask(target: BuildTarget): Build {
     const build = Collections.tasks.create('build', Build.ID()) as Build
     build.construction = target.target
@@ -175,6 +213,13 @@ export abstract class Job<S extends JobEntry, T extends Task<any> = Task<any>>
     upgrade.room = this.room
     upgrade.job = this
     return upgrade
+  }
+
+  private say(): void {
+    if (Memory?.config?.hideSay) return
+    this.creep.say(
+      `${this.type.slice(0, 4)}: ${this.currentTask?.emoji || '💤'}`
+    )
   }
 
   public update(): void {
@@ -194,8 +239,7 @@ export abstract class Job<S extends JobEntry, T extends Task<any> = Task<any>>
     if (this.spawning) return
 
     if (this.currentTask) this.currentTask.run()
-    this.creep.say(
-      `${this.type.slice(0, 4)}: ${this.currentTask?.emoji || '💤'}`
-    )
+
+    this.say()
   }
 }

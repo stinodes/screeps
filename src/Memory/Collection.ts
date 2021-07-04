@@ -70,6 +70,10 @@ export abstract class Collection<T extends State<Entry>> {
     })
   }
 
+  public reset(): void {
+    this.instances = {}
+  }
+
   public getClass(id: string): new (id: string) => T {
     throw Error('Cannot call abstract collection with ' + id)
   }

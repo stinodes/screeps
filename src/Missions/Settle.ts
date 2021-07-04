@@ -43,7 +43,10 @@ export class Settle extends Mission<SettleEntry, Jobs> {
    */
   protected getRequiredJobs(): string[] {
     const sources = this.village.room.find(FIND_SOURCES_ACTIVE)
-    const builders = Math.max(1, Math.ceil(this.constructionSites.length / 4))
+    const builders = Math.min(
+      Math.max(1, Math.ceil(this.constructionSites.length / 4)),
+      2
+    )
 
     // peasant chunks
     const workers: (string[] | string)[] = new Array<string>(

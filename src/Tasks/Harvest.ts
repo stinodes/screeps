@@ -8,6 +8,7 @@ export class Harvest extends Task<HarvestEntry> {
   public type = 'harvest'
   public source: null | Source
   public emoji = '⛏️'
+  private errorResult: ScreepsReturnCode | null = null
 
   public load(memory: HarvestEntry): void {
     super.load(memory)
@@ -23,6 +24,7 @@ export class Harvest extends Task<HarvestEntry> {
     const creep = this.creep
     if (!creep || creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0)
       return true
+    if (this.errorResult === ERR_NO_PATH) return true
     return false
   }
 
@@ -41,6 +43,9 @@ export class Harvest extends Task<HarvestEntry> {
     if (!this.source) return
 
     const result = this.harvest(this.source)
-    if (result === ERR_NOT_IN_RANGE) this.moveToTarget(this.source.pos)
+    if (result === ERR_NOT_IN_RANGE) {
+      const moveResult = this.moveToTarget(this.source.pos)
+      this.errorResult = moveResult
+    }
   }
 }

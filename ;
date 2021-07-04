@@ -3,12 +3,11 @@ import { Collect } from '../Tasks/Collect'
 import { Stash } from '../Tasks/Stash'
 import { ResourceTarget } from '../Target/ResourceTarget'
 import { StoreTarget } from '../Target/StoreTarget'
+import { ContainerTarget } from '../Target/ContainerTarget'
 import { Load } from '../Tasks/Load'
 import { LoadTarget } from '../Target/LoadTarget'
-import { TransferTarget } from '../Target/TransferTarget'
-import { Transfer } from '../Tasks/Transfer'
 
-type Tasks = Stash | Collect | Load | Transfer
+type Tasks = Stash | Collect | Load
 type CourierEntry = JobEntry & { flag: string }
 export class Courier extends Job<CourierEntry, Tasks> {
   public type: 'courier' = 'courier'
@@ -26,7 +25,6 @@ export class Courier extends Job<CourierEntry, Tasks> {
     CARRY
   ]
   public flag: Flag
-  public transferable = false
 
   public load(memory: CourierEntry): void {
     super.load(memory)
@@ -39,19 +37,16 @@ export class Courier extends Job<CourierEntry, Tasks> {
   }
 
   protected getNextTask(): Tasks | null {
-    const stashTarget = StoreTarget.fromJob(StoreTarget, this)
-    const transferTarget = TransferTarget.fromJob(TransferTarget, this)
-    if (this.step === 'stashing') {
-      if (stashTarget.exists) return this.getStashTask(stashTarget)
-      if (transferTarget.exists) return this.getTransferTask(transferTarget)
-    }
-
     const container = this.flag.pos
       .lookFor(LOOK_STRUCTURES)
       .filter(structure => structure.structureType === STRUCTURE_CONTAINER)[0]
     const resource = this.flag.pos
       .lookFor(LOOK_RESOURCES)
       .filter(r => r.amount >= 50)[0]
+
+    const stashTarget = StoreTarget.fromJob(StoreTarget, this)
+    if (stashTarget.exists && this.step === 'stashing')
+      return this.getStashTask(stashTarget)
 
     const resourceTarget = ResourceTarget.fromTarget(
       ResourceTarget,
@@ -60,17 +55,15 @@ export class Courier extends Job<CourierEntry, Tasks> {
     ) as ResourceTarget
     if (resourceTarget.exists) return this.getCollectTask(resourceTarget)
 
-    const loadTarget = LoadTarget.fromTarget(
+    const container = LoadTarget.fromTarget(
       LoadTarget,
       this.mission.village,
       container
-    ) as LoadTarget
-    if (loadTarget.exists) return this.getLoadTask(loadTarget)
+    )
+    if (containerTarget.exists) return this.getLoadTask(containerTarget)
 
-    if (this.getUsedCapacity() > 0) {
-      if (stashTarget.exists) return this.getStashTask(stashTarget)
-      if (transferTarget.exists) return this.getTransferTask(transferTarget)
-    }
+    if (this.getUsedCapacity() > 0 && stashTarget.exists)
+      return this.getStashTask(stashTarget)
 
     return null
   }

@@ -51,31 +51,36 @@ const createVillage = () => {
 
 // When compiling TS to JS and bundling with rollup, the line numbers and file names in error messages change
 // This utility uses source maps to get the line numbers and file names of the original, TS source code
-export const loop = ErrorMapper.wrapLoop(() => {
-  console.log(`Current game tick is ${Game.time}`)
+export const loop = ErrorMapper.wrapLoop(
+  () => {
+    console.log(`Current game tick is ${Game.time}`)
 
-  global.db = Collections
+    global.db = Collections
 
-  const villages = Collections.villages.loadAll()
+    const villages = Collections.villages.loadAll()
 
-  if (!villages.length) createVillage()
+    if (!villages.length) createVillage()
 
-  villages
-    .map(village => {
-      village.update()
-      return village
-    })
-    .map(village => {
-      village.run()
-      return village
-    })
+    villages
+      .map(village => {
+        village.update()
+        return village
+      })
+      .map(village => {
+        village.run()
+        return village
+      })
 
-  Object.values(Collections).forEach(collection => collection.saveAll())
+    Object.values(Collections).forEach(collection => collection.saveAll())
 
-  // Automatically delete memory of missing creeps
-  for (const name in Memory.creeps) {
-    if (!(name in Game.creeps)) {
-      delete Memory.creeps[name]
+    // Automatically delete memory of missing creeps
+    for (const name in Memory.creeps) {
+      if (!(name in Game.creeps)) {
+        delete Memory.creeps[name]
+      }
     }
+  },
+  () => {
+    Object.values(Collections).forEach(collection => collection.reset())
   }
-})
+)

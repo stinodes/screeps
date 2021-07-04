@@ -23,6 +23,11 @@ export class Collect extends Task<CollectEntry> {
     return this.creep.store.getFreeCapacity(RESOURCE_ENERGY) === 0
   }
 
+  public update(): void {
+    this.resource = this.resource ? Game.getObjectById(this.resource.id) : null
+    super.update()
+  }
+
   public run(): void {
     if (this.creep.spawning || !this.resource) return
 

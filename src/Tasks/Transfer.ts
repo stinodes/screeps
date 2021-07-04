@@ -1,19 +1,19 @@
 import { Task, TaskEntry } from './Task'
 
-type StashEntry = TaskEntry & {
-  target: Id<AnyStoreStructure> | null
+type TransferEntry = TaskEntry & {
+  target: string | null
 }
 
-export class Stash extends Task<StashEntry> {
-  public type = 'stash'
+export class Transfer extends Task<TransferEntry> {
+  public type = 'transfer'
   public target: null | AnyStoreStructure
-  public emoji = '🚚'
+  public emoji = '🍆'
 
-  public load(memory: StashEntry): void {
+  public load(memory: TransferEntry): void {
     super.load(memory)
     this.target = memory.target ? Game.getObjectById(memory.target) : null
   }
-  public save(): StashEntry {
+  public save(): TransferEntry {
     const memory = super.save()
     memory.target = this.target?.id || null
     return memory
@@ -32,7 +32,6 @@ export class Stash extends Task<StashEntry> {
   }
 
   public update(): void {
-    this.target = this.target ? Game.getObjectById(this.target.id) : null
     super.update()
   }
 

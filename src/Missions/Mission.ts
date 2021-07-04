@@ -54,7 +54,7 @@ export abstract class Mission<S extends MissionEntry, J extends Job<JobEntry>>
     this.jobs = [...this.jobs, job]
   }
   public removeUnits(...jobIds: string[]): void {
-    this.jobs = this.jobs.filter(u => jobIds.indexOf(u.id) !== -1)
+    this.jobs = this.jobs.filter(u => jobIds.indexOf(u.id) === -1)
   }
   protected getRequiredJobs(): string[] {
     return []

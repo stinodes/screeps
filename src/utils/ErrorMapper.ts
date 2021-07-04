@@ -69,12 +69,16 @@ export class ErrorMapper {
     return outStack
   }
 
-  public static wrapLoop(loop: () => void): () => void {
+  public static wrapLoop(
+    loop: () => void,
+    onCatch?: (error: Error) => void
+  ): () => void {
     return () => {
       try {
         loop()
       } catch (e) {
         if (e instanceof Error) {
+          if (onCatch) onCatch(e)
           if ('sim' in Game.rooms) {
             const message = `Source maps don't work in the simulator - displaying original error`
             console.log(

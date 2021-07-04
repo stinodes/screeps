@@ -29,6 +29,16 @@ export class Target<T> {
     return t
   }
 
+  public static fromTarget<T>(
+    TClass: new (v: AnyVillage) => Target<T>,
+    village: AnyVillage,
+    target: T
+  ): Target<T> {
+    const t = new TClass(village)
+    t.t = target
+    return t
+  }
+
   public get exists(): boolean {
     return !!this.target
   }

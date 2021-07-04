@@ -37,6 +37,10 @@ export class Load extends Task<LoadEntry> {
     return false
   }
 
+  public update(): void {
+    this.storage = this.storage ? Game.getObjectById(this.storage.id) : null
+    super.update()
+  }
   public run(): void {
     if (!this.storage) return
 

@@ -7,7 +7,7 @@ type BuildEntry = TaskEntry & {
 export class Build extends Task<BuildEntry> {
   public type: 'build' = 'build'
   public construction: null | ConstructionSite
-  public emoji = '🏗️'
+  public emoji = '🔨'
 
   public load(memory: BuildEntry): void {
     super.load(memory)
@@ -37,6 +37,12 @@ export class Build extends Task<BuildEntry> {
     return style
   }
 
+  public update(): void {
+    this.construction = this.construction
+      ? Game.getObjectById(this.construction.id)
+      : null
+    super.update()
+  }
   public run(): void {
     if (!this.construction) return
 

@@ -85,6 +85,9 @@ export abstract class Task<S extends TaskEntry>
   public build(target: ConstructionSite): ScreepsReturnCode {
     return this.creep?.build(target)
   }
+  public repair(target: Structure): ScreepsReturnCode {
+    return this.creep?.repair(target)
+  }
   public upgrade(target: StructureController): ScreepsReturnCode {
     return this.creep?.upgradeController(target)
   }

@@ -1,17 +1,18 @@
 import { Target } from './Target'
 
-export class LoadTarget extends Target<AnyStoreStructure> {
-  protected calculateTarget(): null | AnyStoreStructure {
+export class LoadTarget<
+  T extends AnyStoreStructure = AnyStoreStructure
+> extends Target<T> {
+  protected calculateTarget(): null | T {
     // Storages first
     const storages = this.village.room
       .find(FIND_STRUCTURES)
       .filter(
         s =>
-          (s.structureType === STRUCTURE_STORAGE ||
-            s.structureType === STRUCTURE_CONTAINER) &&
+          s.structureType === STRUCTURE_STORAGE &&
           s.store.getUsedCapacity() !== 0
       ) as StructureStorage[]
-    if (storages.length) return storages[0]
+    if (storages.length) return storages[0] as T
 
     if (this.village.hasJobRequests()) return null
 
@@ -25,12 +26,12 @@ export class LoadTarget extends Target<AnyStoreStructure> {
           ext.structureType === STRUCTURE_EXTENSION &&
           ext.store.getUsedCapacity(RESOURCE_ENERGY) > 0
       ) as StructureExtension[]
-    if (extensions.length) return extensions[0] // Spawn if no storages & no spawning & no extensions
+    if (extensions.length) return extensions[0] as T // Spawn if no storages & no spawning & no extensions
 
     const spawns = this.village.spawns.filter(
       spawn => spawn.store.getUsedCapacity(RESOURCE_ENERGY) >= 50
     )
-    if (spawns.length) return spawns[0]
+    if (spawns.length) return spawns[0] as T
 
     return null
   }
