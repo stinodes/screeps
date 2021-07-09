@@ -5,15 +5,21 @@ import { Build } from '../Tasks/Build'
 import { Upgrade } from '../Tasks/Upgrade'
 import { Collections } from '../Memory'
 import { Repair } from '../Tasks/Repair'
+import { Body } from './Body'
 
 type HarvesterEntry = JobEntry & { room: string; source: null | Id<Source> }
 type Tasks = Harvest | Stash | Repair | Build | Upgrade
 export class Settler extends Job<HarvesterEntry, Tasks> {
   public type: 'settler' = 'settler'
   public source: null | Source
-  public body = [WORK, MOVE, MOVE, CARRY, CARRY]
   public step: 'gathering' | 'using' = 'gathering'
   public transferable = false
+
+  public body = Body.create()
+    .addStaticPart(WORK)
+    .addStaticPart(WORK)
+    .addStaticPart(MOVE)
+    .addStaticPart(CARRY)
 
   public load(memory: HarvesterEntry): void {
     super.load(memory)

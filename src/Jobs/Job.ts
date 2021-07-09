@@ -20,6 +20,7 @@ import { Repair } from '../Tasks/Repair'
 import { TransferTarget } from '../Target/TransferTarget'
 import { Transfer } from '../Tasks/Transfer'
 import { MoveTo } from '../Tasks/MoveTo'
+import { Body } from './Body'
 
 export type JobUpgradeTarget = {
   type: string
@@ -41,11 +42,12 @@ export abstract class Job<S extends JobEntry, T extends Task<any> = Task<any>>
   public creepName: string
   public room: Room
   public mission: Mission<MissionEntry, any>
-  public body: BodyPartConstant[]
   public upgrades: JobUpgradeTarget | null = null
   public step: string
   public transferable = true
   public transferring = false
+
+  public body: Body
 
   public static ID = (): string => Collections.jobs.ID()
 

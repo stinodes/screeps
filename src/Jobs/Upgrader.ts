@@ -3,6 +3,7 @@ import { Load } from '../Tasks/Load'
 import { Upgrade } from '../Tasks/Upgrade'
 import { Harvest } from '../Tasks/Harvest'
 import { Collect } from '../Tasks/Collect'
+import { Body } from './Body'
 
 type UpgraderEntry = JobEntry & { room: string }
 export class Upgrader extends Job<
@@ -11,8 +12,12 @@ export class Upgrader extends Job<
 > {
   public type: 'upgrader' = 'upgrader'
   public room: Room
-  public body = [WORK, WORK, MOVE, CARRY]
   public step: 'upgrade' | 'load' = 'load'
+
+  public body = Body.create()
+    .addDynamicPart(WORK, 1 / 4)
+    .addDynamicPart(MOVE, 1 / 4)
+    .addDynamicPart(CARRY, 2 / 4)
 
   public load(memory: UpgraderEntry): void {
     super.load(memory)

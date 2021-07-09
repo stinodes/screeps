@@ -2,6 +2,7 @@ import { Job, JobEntry } from './Job'
 import { Harvest } from '../Tasks/Harvest'
 import { Collections } from '../Memory'
 import { MoveTo } from '../Tasks/MoveTo'
+import { Body } from './Body'
 
 type PeasantEntry = JobEntry & {
   room: string
@@ -13,13 +14,17 @@ export class Peasant extends Job<PeasantEntry, Tasks> {
   public type: 'peasant' = 'peasant'
   public source: null | Source
   public flag: null | Flag
-  public body = [MOVE, MOVE, CARRY, WORK, WORK, WORK, WORK]
   public step: 'harvest' | 'move' = 'move'
   public upgrades = {
     type: 'settler',
     prop: 'source'
   }
   public transferable = false
+
+  public body = Body.create()
+    .addStaticPart(CARRY)
+    .addStaticPart(MOVE, 2)
+    .addStaticPart(WORK, 6)
 
   public load(memory: PeasantEntry): void {
     super.load(memory)

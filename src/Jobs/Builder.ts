@@ -7,6 +7,7 @@ import { BuildTarget } from '../Target/BuildTarget'
 import { Stash } from '../Tasks/Stash'
 import { Collect } from '../Tasks/Collect'
 import { Repair } from '../Tasks/Repair'
+import { Body } from './Body'
 
 type BuilderEntry = JobEntry & { construction: null | Id<ConstructionSite> }
 export class Builder extends Job<
@@ -15,8 +16,12 @@ export class Builder extends Job<
 > {
   public type: 'builder' = 'builder'
   public construction: null | ConstructionSite
-  public body = [WORK, WORK, MOVE, CARRY]
   public step: 'build' | 'load' = 'load'
+
+  public body = Body.create()
+    .addDynamicPart(WORK, 1 / 4)
+    .addDynamicPart(MOVE, 1 / 4)
+    .addDynamicPart(CARRY, 2 / 4)
 
   public load(memory: BuilderEntry): void {
     super.load(memory)

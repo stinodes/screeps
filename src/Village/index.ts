@@ -79,14 +79,25 @@ export class Village<S extends VillageEntry>
     }, null as null | { mission: AnyMission; job: string })
   }
 
+  public get energyAvailable(): number {
+    return this.room.energyAvailable
+  }
+  public get energyCapacityAvailable(): number {
+    return this.room.energyCapacityAvailable
+  }
+
   private dryRunSpawnJob(spawn: StructureSpawn, jobName: string): boolean {
     const id = Job.ID()
     const name = `${jobName}:${id}`
     const testJob = Collections.jobs.create(jobName)
 
-    const dryRunResult = spawn.spawnCreep(testJob.body, name, {
-      dryRun: true
-    })
+    const dryRunResult = spawn.spawnCreep(
+      testJob.body.build(this.energyCapacityAvailable),
+      name,
+      {
+        dryRun: true
+      }
+    )
 
     return dryRunResult === 0
   }
@@ -113,9 +124,13 @@ export class Village<S extends VillageEntry>
     const job = Collections.jobs.create(jobName, id)
     job.creepName = name
     job.room = this.room
-    const result = spawn.spawnCreep(job.body, name, {
-      memory: { jobName, jobId: id }
-    })
+    const result = spawn.spawnCreep(
+      job.body.build(this.energyCapacityAvailable),
+      name,
+      {
+        memory: { jobName, jobId: id }
+      }
+    )
 
     if (result !== 0) {
       return console.log('Error spawning job:, ', result)
@@ -175,6 +190,7 @@ export class Village<S extends VillageEntry>
   }
 
   private reassignVillagers(): void {
+    this.villagers = this.villagers.filter(job => !!job && !job.delete)
     const blank = this.missions.find(mission => mission.type === 'blank')
     if (!blank) return
     this.villagers.forEach(job => {
@@ -201,14 +217,27 @@ export class Village<S extends VillageEntry>
     return !!this.findMission(type)
   }
   private createMissions(): void {
-    if (!this.hasMission('blank'))
+    if (!this.hasMission('blank')) {
       this.assignMission(this.createMission('blank'))
+    }
     if (!this.hasMission('settle') && !this.progress.settle) {
       this.assignMission(this.createMission('settle'))
     }
     if (!this.hasMission('maintain') && this.progress.settle) {
       this.assignMission(this.createMission('maintain'))
     }
+  }
+
+  private runTowers(): void {
+    const towers = this.room.find(FIND_STRUCTURES, {
+      filter: {
+        structureType: STRUCTURE_TOWER
+      }
+    }) as StructureTower[]
+    towers.forEach(tower => {
+      const enemy = this.room.find(FIND_HOSTILE_CREEPS)[0]
+      if (enemy) tower.attack(enemy)
+    })
   }
 
   public update(): void {
@@ -222,6 +251,7 @@ export class Village<S extends VillageEntry>
     })
   }
   public run(): void {
+    this.runTowers()
     return this.missions.forEach(mission => mission.run())
   }
 }

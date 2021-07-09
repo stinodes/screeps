@@ -36,15 +36,14 @@ export class Maintain extends Mission<MaintainEntry, Jobs> {
    */
   protected getRequiredJobs(): string[] {
     const sources = this.village.room.find(FIND_SOURCES_ACTIVE)
-    const nBuilders = this.village.controllerLevel || 1
+    const nBuilders = Math.min(Math.max(this.constructionSites.length, 1), 3)
 
     //  need couriers to make peasants useful
-    const couriers = new Array<string>(sources.length * 2).fill('courier')
+    const couriers = ['courier']
     // peasant chunks
     const peasants = new Array<string>(sources.length).fill('peasant')
-    const workers: (string | string[])[] = _.zip(couriers, peasants)
+    const workers: (string | string[])[] = couriers.concat(peasants)
     // append builders
-    workers.push('upgrader')
     workers.push('upgrader')
     workers.push(new Array(nBuilders).fill('builder'))
     const flattenedWorkers = _.flatten(workers).filter(Boolean)
@@ -68,23 +67,6 @@ export class Maintain extends Mission<MaintainEntry, Jobs> {
     if (job.type === ('builder' as const)) {
       const site = this.constructionSites[0]
       job.construction = site || null
-    }
-    if (job.type === ('courier' as const)) {
-      const flags = this.village.room.find(FIND_FLAGS, {
-        filter: flag => flag.name.indexOf('harvest') !== -1
-      })
-      const unassignedFlag =
-        flags.find(
-          flag =>
-            this.jobs.filter(
-              j =>
-                j.type === 'courier' &&
-                'flag' in j &&
-                j.flag &&
-                j.flag.name === flag.name
-            ).length !== 2
-        ) || null
-      if (unassignedFlag) job.flag = unassignedFlag
     }
     return super.assignVillager(job)
   }
