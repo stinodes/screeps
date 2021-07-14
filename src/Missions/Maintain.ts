@@ -45,6 +45,7 @@ export class Maintain extends Mission<MaintainEntry, Jobs> {
     const workers: (string | string[])[] = couriers.concat(peasants)
     // append builders
     workers.push('upgrader')
+    workers.push('upgrader')
     workers.push(new Array(nBuilders).fill('builder'))
     const flattenedWorkers = _.flatten(workers).filter(Boolean)
 
