@@ -217,7 +217,7 @@ export class Village<S extends VillageEntry>
     return !!this.findMission(type)
   }
   private createMissions(): void {
-    if (!this.hasMission('blank')) {
+    if (!this.progress.settle && !this.hasMission('blank')) {
       this.assignMission(this.createMission('blank'))
     }
     if (!this.hasMission('settle') && !this.progress.settle) {
@@ -229,11 +229,11 @@ export class Village<S extends VillageEntry>
   }
 
   private runTowers(): void {
-    const towers = this.room.find(FIND_STRUCTURES, {
+    const towers: StructureTower[] = this.room.find(FIND_STRUCTURES, {
       filter: {
         structureType: STRUCTURE_TOWER
       }
-    }) as StructureTower[]
+    })
     towers.forEach(tower => {
       const enemy = this.room.find(FIND_HOSTILE_CREEPS)[0]
       if (enemy) tower.attack(enemy)
